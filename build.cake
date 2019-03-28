@@ -11,6 +11,12 @@ public class Settings
   public string DylibPrefix {get; set;}
 };
 
+public void Check(int exitCode)
+{
+  if (exitCode != 0)
+    throw new Exception($"Process returned non-zero exit code '{exitCode}'");
+}
+
 // Cached settings for the current platform
 Setup<Settings>(context =>
 {
@@ -49,10 +55,10 @@ Task("BuildRe2")
         .Append("obj/libre2.a")
         .Append($"-j{Environment.ProcessorCount * 2}");
 
-      StartProcess("make", new ProcessSettings {
+      Check(StartProcess("make", new ProcessSettings {
         Arguments = args,
         WorkingDirectory = Directory("thirdparty/re2/"),
-      });
+      }));
     }
     else
     {
@@ -92,15 +98,16 @@ Task("BuildCre2")
         .Append("-Dcre2_VERSION_INTERFACE_AGE=0")
         .Append("-Dcre2_VERSION_INTERFACE_STRING=\\\"0.0.0\\\"")
         // sources and static libraries to link in
+        .Append("-I../re2/")
         .Append("src/cre2.cpp")
         .Append("../re2/obj/libre2.a")
         // output to our `bin/` folder
         .Append($"-o{outFile}");
 
-      StartProcess("clang++", new ProcessSettings {
+      Check(StartProcess("clang++", new ProcessSettings {
         Arguments = args,
         WorkingDirectory = Directory("thirdparty/cre2/"),
-      });
+      }));
     }
     else
     {
