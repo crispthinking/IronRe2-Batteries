@@ -121,6 +121,7 @@ Task("Pack")
   .IsDependentOn("BuildCre2")
   .Does(() =>
   {
+    CreateDirectory("bin/artifacts/");
     var versionInfo = GitVersion(new GitVersionSettings
     {
       UpdateAssemblyInfo = false,
@@ -145,7 +146,7 @@ Task("Pack")
         new NuSpecContent {Source = "bin/contents/", Target = ""},
       },
       BasePath                = "./",
-      OutputDirectory         = "bin/"
+      OutputDirectory         = "bin/artifacts/"
     });
   });
 
