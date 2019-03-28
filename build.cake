@@ -1,3 +1,4 @@
+#tool nuget:?package=GitVersion.CommandLine&version=4.0.0
 
 var target = Argument("target", "Default");
 
@@ -120,9 +121,14 @@ Task("Pack")
   .IsDependentOn("BuildCre2")
   .Does(() =>
   {
-     NuGetPack(new NuGetPackSettings {
+    var versionInfo = GitVersion(new GitVersionSettings
+    {
+      UpdateAssemblyInfo = false,
+      NoFetch = true,
+    });
+    NuGetPack(new NuGetPackSettings {
       Id                      = $"IronRe2-Batteries.{Context.Environment.Platform.Family}",
-      Version                 = "0.0.0.1",
+      Version                 = versionInfo.NuGetVersionV2,
       Title                   = "IronRe2 Batteries",
       Authors                 = new[] { CrispGroupName },
       Owners                  = new[] { CrispGroupName },
@@ -140,7 +146,7 @@ Task("Pack")
       },
       BasePath                = "./",
       OutputDirectory         = "bin/"
-     });
+    });
   });
 
 // Remove the build artifacts and clean the thirdparty repos
