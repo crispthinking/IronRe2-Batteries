@@ -1,6 +1,9 @@
 
 var target = Argument("target", "Default");
 
+// Used for copyright and ownership information.
+public const string CrispGroupName = "Crisp Thinking Group Ltd.";
+
 public class Settings
 {
   public string DylibExt {get; set;}
@@ -8,6 +11,7 @@ public class Settings
   public string DylibPrefix {get; set;}
 };
 
+// Cached settings for the current platform
 Setup<Settings>(context =>
 {
   switch (context.Environment.Platform.Family)
@@ -35,20 +39,28 @@ Setup<Settings>(context =>
   }
 });
 
+// Build the RE2 library
 Task("BuildRe2")
   .Does(() =>
   {
-    // TODO: Need to chose a different build path for Windows.
-    var args = new ProcessArgumentBuilder()
-      .Append("obj/libre2.a")
-      .Append($"-j{Environment.ProcessorCount * 2}");
+    if (Context.Environment.Platform.IsUnix())
+    {
+      var args = new ProcessArgumentBuilder()
+        .Append("obj/libre2.a")
+        .Append($"-j{Environment.ProcessorCount * 2}");
 
-    StartProcess("make", new ProcessSettings {
-      Arguments = args,
-      WorkingDirectory = Directory("thirdparty/re2/"),
-    });
+      StartProcess("make", new ProcessSettings {
+        Arguments = args,
+        WorkingDirectory = Directory("thirdparty/re2/"),
+      });
+    }
+    else
+    {
+      // TODO: Need to chose a different build path for Windows.
+    }
   });
 
+// Build the C FFI interface and link in RE2 statically
 Task("BuildCre2")
   .IsDependentOn("BuildRe2")
   .Does<Settings>(s =>
@@ -56,40 +68,75 @@ Task("BuildCre2")
     var outFile = MakeAbsolute(File($"bin/contents/runtimes/{s.Rid}/native/{s.DylibPrefix}cre2.{s.DylibExt}"));
     CreateDirectory(outFile.GetDirectory());
     
-    // TODO: we will need a different way to compile this on Windows
-    Information("Building with Clang++");
-    Information(outFile);
-    
-    // To compile CRE2 we shell out to `clang++` directly. It's only a single
-    // C++ file. We statically link in the RE2 build we produced earlier in
-    // the `BuildRe2` task.
-    var args = new ProcessArgumentBuilder()
-      // we're building a shared library
-      .Append("-shared")
-      .Append("-fpic")
-      // Uses C++ 11
-      .Append("-std=c++11")
-      // Release build please
-      .Append("-O3")
-      .Append("-g")
-      .Append("-DNDEBUG")
-      // Need to define the version number for the library
-      .Append("-Dcre2_VERSION_INTERFACE_CURRENT=0")
-      .Append("-Dcre2_VERSION_INTERFACE_REVISION=0")
-      .Append("-Dcre2_VERSION_INTERFACE_AGE=0")
-      .Append("-Dcre2_VERSION_INTERFACE_STRING=\\\"0.0.0\\\"")
-      // sources and static libraries to link in
-      .Append("src/cre2.cpp")
-      .Append("../re2/obj/libre2.a")
-      // output to our `bin/` folder
-      .Append($"-o{outFile}");
+    if (Context.Environment.Platform.IsUnix())
+    {
+      Information("Building with Clang++");
+      Information(outFile);
+      
+      // To compile CRE2 we shell out to `clang++` directly. It's only a single
+      // C++ file. We statically link in the RE2 build we produced earlier in
+      // the `BuildRe2` task.
+      var args = new ProcessArgumentBuilder()
+        // we're building a shared library
+        .Append("-shared")
+        .Append("-fpic")
+        // Uses C++ 11
+        .Append("-std=c++11")
+        // Release build please
+        .Append("-O3")
+        .Append("-g")
+        .Append("-DNDEBUG")
+        // Need to define the version number for the library
+        .Append("-Dcre2_VERSION_INTERFACE_CURRENT=0")
+        .Append("-Dcre2_VERSION_INTERFACE_REVISION=0")
+        .Append("-Dcre2_VERSION_INTERFACE_AGE=0")
+        .Append("-Dcre2_VERSION_INTERFACE_STRING=\\\"0.0.0\\\"")
+        // sources and static libraries to link in
+        .Append("src/cre2.cpp")
+        .Append("../re2/obj/libre2.a")
+        // output to our `bin/` folder
+        .Append($"-o{outFile}");
 
-    StartProcess("clang++", new ProcessSettings {
-      Arguments = args,
-      WorkingDirectory = Directory("thirdparty/cre2/"),
-    });
+      StartProcess("clang++", new ProcessSettings {
+        Arguments = args,
+        WorkingDirectory = Directory("thirdparty/cre2/"),
+      });
+    }
+    else
+    {
+      // TODO: we will need a different way to compile this on Windows
+    }
   });
 
+// Create the NuGet battery pack package for this platform 
+Task("Pack")
+  .IsDependentOn("BuildCre2")
+  .Does(() =>
+  {
+     NuGetPack(new NuGetPackSettings {
+      Id                      = $"IronRe2-Batteries.{Context.Environment.Platform.Family}",
+      Version                 = "0.0.0.1",
+      Title                   = "IronRe2 Batteries",
+      Authors                 = new[] { CrispGroupName },
+      Owners                  = new[] { CrispGroupName },
+      Description             = "platform-specific Nu-Get package containing RE2 and the cre2 wrapper",
+      Summary                 = "Native code dependency of IronRe2",
+      ProjectUrl              = new Uri("https://github.com/crispthinking/IronRe2-Batteries/"),
+      LicenseUrl              = new Uri("https://github.com/crispthinking/IronRe2-Batteries/blob/master/LICENSE"),
+      Copyright               = $"{CrispGroupName} 2019",
+      Tags                    = new [] {"Regex", "Re2"},
+      RequireLicenseAcceptance= false,
+      Symbols                 = false,
+      NoPackageAnalysis       = true,
+      Files                   = new [] {
+        new NuSpecContent {Source = "bin/contents/", Target = ""},
+      },
+      BasePath                = "./",
+      OutputDirectory         = "bin/"
+     });
+  });
+
+// Remove the build artifacts and clean the thirdparty repos
 Task("Clean")
   .Does(() =>
   {
@@ -103,10 +150,8 @@ Task("Clean")
     });
   });
 
+// Phony target to trigger all the things we _usually_ want done.
 Task("Default")
-    .Does(() =>
-    {
-        Information("hello world");
-    });
+  .IsDependentOn("Pack");
 
 RunTarget(target);
