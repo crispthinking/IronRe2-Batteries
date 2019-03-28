@@ -1,3 +1,6 @@
 [submodule "re2"]
 	path = thirdparty/re2
 	url = https://github.com/google/re2
+[submodule "cre2"]
+	path = thirdparty/cre2
+	url = https://github.com/marcomaggi/cre2
