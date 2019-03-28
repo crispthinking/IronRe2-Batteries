@@ -100,8 +100,9 @@ Task("BuildCre2")
         .Append("-Dcre2_VERSION_INTERFACE_STRING=\\\"0.0.0\\\"")
         // sources and static libraries to link in
         .Append("-I../re2/")
+        .Append("-L../re2/obj/")
+        .Append("-lre2")
         .Append("src/cre2.cpp")
-        .Append("../re2/obj/libre2.a")
         // output to our `bin/` folder
         .Append($"-o{outFile}");
 
