@@ -24,7 +24,7 @@ jobs:
     vmImage: 'vs2017-win2016'
   steps:
   - script: git submodule update --init
-  - powershell: .\build.ps1
+  - script: .\ci_build.bat
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: bin/artifacts/

@@ -1,4 +1,5 @@
 #tool nuget:?package=GitVersion.CommandLine&version=4.0.0
+#addin nuget:?package=Cake.CMake&version=0.2.2
 
 var target = Argument("target", "Default");
 
@@ -63,7 +64,15 @@ Task("BuildRe2")
     }
     else
     {
-      // TODO: Need to chose a different build path for Windows.
+      CreateDirectory("bin/re2/");
+      CMake("thirdparty/re2/", new CMakeSettings {
+        OutputPath = "bin/re2/",
+        Options = new [] { "-DBUILD_TESTING=OFF", "-DBUILD_SHARED_LIBS=OFF", "-DRE2_BUILD_TESTING=OFF", "-DCMAKE_GENERATOR_PLATFORM=x64" },
+      });
+      MSBuild("bin/re2/RE2.sln", new MSBuildSettings {
+        Verbosity = Verbosity.Minimal,
+        Configuration = "Release",
+      });
     }
   });
 
@@ -75,6 +84,7 @@ Task("BuildCre2")
     var outFile = MakeAbsolute(File($"bin/contents/runtimes/{s.Rid}/native/{s.DylibPrefix}cre2.{s.DylibExt}"));
     CreateDirectory(outFile.GetDirectory());
     
+    // For this build we just shell out to the platform's C++ compiler
     if (Context.Environment.Platform.IsUnix())
     {
       Information("Building with Clang++");
@@ -113,7 +123,32 @@ Task("BuildCre2")
     }
     else
     {
-      // TODO: we will need a different way to compile this on Windows
+      var args = new ProcessArgumentBuilder()
+        // C++ 14 dynamic library with exceptions
+        .Append("/EHsc")
+        .Append("/std:c++14")
+        .Append("/LD")
+        .Append("/MD")
+        // Release build
+        .Append("/O2")
+        .Append("/DNDEBUG")
+        // Need to define the version number for the library
+        .Append("/Dcre2_VERSION_INTERFACE_CURRENT=0")
+        .Append("/Dcre2_VERSION_INTERFACE_REVISION=0")
+        .Append("/Dcre2_VERSION_INTERFACE_AGE=0")
+        .Append("/Dcre2_VERSION_INTERFACE_STRING=\\\"0.0.0\\\"")
+        // sources to use and location of object files
+        .Append("/I../re2/")
+        .Append("src/cre2.cpp")
+        .Append("/Fo.\\..\\..\\bin")
+        // Linker options. Include the RE2 static library and set the output
+        .Append("/link")
+        .Append("../../bin/re2/Release/re2.lib")
+        .Append($"/out:{outFile}");
+      Check(StartProcess("cl", new ProcessSettings {
+        Arguments = args,
+        WorkingDirectory = Directory("thirdparty/cre2/"),
+      }));
     }
   });
 
