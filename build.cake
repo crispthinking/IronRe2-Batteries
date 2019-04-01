@@ -1,5 +1,6 @@
 #tool nuget:?package=GitVersion.CommandLine&version=4.0.0
 #addin nuget:?package=Cake.CMake&version=0.2.2
+#addin nuget:?package=Cake.Incubator&version=3.1.0
 
 var target = Argument("target", "Default");
 
@@ -164,6 +165,20 @@ Task("Pack")
       UpdateAssemblyInfo = false,
       NoFetch = true,
     });
+
+    var contentsPath = MakeAbsolute(Directory("bin/contents")).ToString();
+    var contentFiles = GetFiles(contentsPath + "/**/*.*")
+        .Select(file => new NuSpecContent {
+          Source = file.FullPath,
+          Target = file.FullPath
+            .Replace(contentsPath, "")
+            .TrimStart(new [] { '\\', '/' })
+          })
+        .ToArray();
+    foreach (var file in contentFiles)
+    {
+        Information("including {0}", file.Dump());
+    }
     NuGetPack(new NuGetPackSettings {
       Id                      = $"IronRe2-Batteries.{Context.Environment.Platform.Family}",
       Version                 = versionInfo.NuGetVersionV2,
@@ -179,9 +194,7 @@ Task("Pack")
       RequireLicenseAcceptance= false,
       Symbols                 = false,
       NoPackageAnalysis       = true,
-      Files                   = new [] {
-        new NuSpecContent {Source = "./bin/contents/runtimes/**", Target = "runtimes"},
-      },
+      Files = contentFiles,
       BasePath = "./",
       OutputDirectory         = "bin/artifacts/",
     });
