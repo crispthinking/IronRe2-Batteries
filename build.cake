@@ -180,23 +180,30 @@ Task("Pack")
         Information("including {0}", file.Dump());
     }
     NuGetPack(new NuGetPackSettings {
-      Id                      = $"IronRe2-Batteries.{Context.Environment.Platform.Family}",
-      Version                 = versionInfo.NuGetVersionV2,
-      Title                   = "IronRe2 Batteries",
-      Authors                 = new[] { CrispGroupName },
-      Owners                  = new[] { CrispGroupName },
-      Description             = "platform-specific Nu-Get package containing RE2 and the cre2 wrapper",
-      Summary                 = "Native code dependency of IronRe2",
-      ProjectUrl              = new Uri("https://github.com/crispthinking/IronRe2-Batteries/"),
-      LicenseUrl              = new Uri("https://github.com/crispthinking/IronRe2-Batteries/blob/master/LICENSE"),
-      Copyright               = $"{CrispGroupName} 2019",
-      Tags                    = new [] {"Regex", "Re2"},
+      Id = $"IronRe2-Batteries.{Context.Environment.Platform.Family}",
+      Version = versionInfo.NuGetVersionV2,
+      Title = "IronRe2 Batteries",
+      Authors = new[] { CrispGroupName },
+      Owners = new[] { CrispGroupName },
+      Description = "platform-specific Nu-Get package containing RE2 and the cre2 wrapper",
+      Summary = "Native code dependency of IronRe2",
+      ProjectUrl = new Uri("https://github.com/crispthinking/IronRe2-Batteries/"),
+      LicenseUrl = new Uri("https://github.com/crispthinking/IronRe2-Batteries/blob/master/LICENSE"),
+      Copyright = $"{CrispGroupName} 2019",
+      Tags = new [] {"Regex", "Re2"},
+      Dependencies = new [] {
+        new NuSpecDependency {
+          Id = "NETStandard.Library",
+          Version = "1.6.1",
+          TargetFramework = ".NETStandard1.0",
+        }
+      },
       RequireLicenseAcceptance= false,
-      Symbols                 = false,
-      NoPackageAnalysis       = true,
+      Symbols = false,
+      NoPackageAnalysis = true,
       Files = contentFiles,
       BasePath = "./",
-      OutputDirectory         = "bin/artifacts/",
+      OutputDirectory = "bin/artifacts/",
     });
   });
 
