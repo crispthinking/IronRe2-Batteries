@@ -180,9 +180,10 @@ Task("Pack")
       Symbols                 = false,
       NoPackageAnalysis       = true,
       Files                   = new [] {
-        new NuSpecContent {Source = MakeAbsolute(Directory("bin/contents/")), Target = "/"},
+        new NuSpecContent {Source = "./bin/contents/runtimes/**", Target = "runtimes"},
       },
-      OutputDirectory         = "bin/artifacts/"
+      BasePath = "./",
+      OutputDirectory         = "bin/artifacts/",
     });
   });
 
