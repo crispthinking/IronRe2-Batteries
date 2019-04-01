@@ -28,7 +28,8 @@ Setup<Settings>(context =>
         return new Settings {
           DylibExt = "so",
           DylibPrefix = "lib",
-          Rid = "linux-x64",
+          // FIXME: why can't we use the linux-x64 RID?
+          Rid = "linux",
         };
       case PlatformFamily.OSX:
         return new Settings {
@@ -179,9 +180,8 @@ Task("Pack")
       Symbols                 = false,
       NoPackageAnalysis       = true,
       Files                   = new [] {
-        new NuSpecContent {Source = "bin/contents/", Target = ""},
+        new NuSpecContent {Source = MakeAbsolute(Directory("bin/contents/")), Target = "/"},
       },
-      BasePath                = "./",
       OutputDirectory         = "bin/artifacts/"
     });
   });
