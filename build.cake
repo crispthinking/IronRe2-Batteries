@@ -62,6 +62,9 @@ Task("BuildRe2")
       Check(StartProcess("make", new ProcessSettings {
         Arguments = args,
         WorkingDirectory = Directory("thirdparty/re2/"),
+        EnvironmentVariables = new Dictionary<string, string> {
+          ["CXXFLAGS"] = "-fPIC -O3 -g",
+        }
       }));
     }
     else
@@ -96,6 +99,7 @@ Task("BuildCre2")
       // C++ file. We statically link in the RE2 build we produced earlier in
       // the `BuildRe2` task.
       var args = new ProcessArgumentBuilder()
+        .Append("--verbose")
         // we're building a shared library
         .Append("-shared")
         .Append("-fpic")
@@ -112,9 +116,8 @@ Task("BuildCre2")
         .Append("-Dcre2_VERSION_INTERFACE_STRING=\\\"0.0.0\\\"")
         // sources and static libraries to link in
         .Append("-I../re2/")
-        .Append("-L../re2/obj/")
-        .Append("-lre2")
         .Append("src/cre2.cpp")
+        .Append("../re2/obj/libre2.a")
         // output to our `bin/` folder
         .Append($"-o{outFile}");
 
