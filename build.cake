@@ -25,27 +25,26 @@ Setup<Settings>(context =>
 {
   switch (context.Environment.Platform.Family)
   {
-      case PlatformFamily.Linux:
-        return new Settings {
-          DylibExt = "so",
-          DylibPrefix = "lib",
-          // FIXME: why can't we use the linux-x64 RID?
-          Rid = "linux",
-        };
-      case PlatformFamily.OSX:
-        return new Settings {
-          DylibExt = "dylib",
-          DylibPrefix = "lib",
-          Rid = "osx-x64",
-        };
-      case PlatformFamily.Windows:
-        return new Settings {
-          DylibExt = "dll",
-          DylibPrefix = string.Empty,
-          Rid = "win-x64",
-        };
-      default:
-        throw new Exception("Unknown platform!");
+  case PlatformFamily.Linux:
+    return new Settings {
+      DylibExt = "so",
+      DylibPrefix = "lib",
+      Rid = "linux-x64",
+    };
+  case PlatformFamily.OSX:
+    return new Settings {
+      DylibExt = "dylib",
+      DylibPrefix = "lib",
+      Rid = "osx-x64",
+    };
+  case PlatformFamily.Windows:
+    return new Settings {
+      DylibExt = "dll",
+      DylibPrefix = string.Empty,
+      Rid = "win-x64",
+    };
+  default:
+    throw new Exception("Unknown platform!");
   }
 });
 
