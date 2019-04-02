@@ -41,7 +41,7 @@ Setup<Settings>(context =>
     return new Settings {
       DylibExt = "dll",
       DylibPrefix = string.Empty,
-      Rid = "win7-x64",
+      Rid = "win-x64",
     };
   default:
     throw new Exception("Unknown platform!");
@@ -141,6 +141,8 @@ Task("BuildCre2")
         .Append("/Dcre2_VERSION_INTERFACE_REVISION=0")
         .Append("/Dcre2_VERSION_INTERFACE_AGE=0")
         .Append("/Dcre2_VERSION_INTERFACE_STRING=\\\"0.0.0\\\"")
+        // Export the symbols from the DLL
+        .Append("/Dcre2_decl=__declspec(dllexport)")
         // sources to use and location of object files
         .Append("/I../re2/")
         .Append("src/cre2.cpp")
