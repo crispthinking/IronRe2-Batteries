@@ -1,6 +1,6 @@
 #tool nuget:?package=GitVersion.CommandLine&version=4.0.0
 #addin nuget:?package=Cake.CMake&version=0.2.2
-#addin nuget:?package=Cake.Incubator&version=3.1.0
+#addin nuget:?package=Cake.Incubator&version=4.0.2
 
 var target = Argument("target", "Default");
 
