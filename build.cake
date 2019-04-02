@@ -41,7 +41,7 @@ Setup<Settings>(context =>
     return new Settings {
       DylibExt = "dll",
       DylibPrefix = string.Empty,
-      Rid = "win-x64",
+      Rid = "win7-x64",
     };
   default:
     throw new Exception("Unknown platform!");
