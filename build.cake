@@ -180,6 +180,7 @@ Task("Pack")
             .TrimStart(new [] { '\\', '/' })
           })
         .ToList();
+    Information("Packing for {0}", Context.Environment.Platform.Dump());
     if (Context.Environment.Platform.Family == PlatformFamily.Windows)
     {
       contentFiles.Append(new NuSpecContent{
