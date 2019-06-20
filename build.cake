@@ -170,6 +170,7 @@ Task("Pack")
       NoFetch = true,
     });
 
+    var nuGetPackageId = $"IronRe2-Batteries.{Context.Environment.Platform.Family}";
     var contentsPath = MakeAbsolute(Directory("bin/contents")).ToString();
     var contentFiles = GetFiles(contentsPath + "/**/*.*")
         .Select(file => new NuSpecContent {
@@ -178,13 +179,20 @@ Task("Pack")
             .Replace(contentsPath, "")
             .TrimStart(new [] { '\\', '/' })
           })
-        .ToArray();
+        .ToList();
+    if (Context.Environment.Platform.Family == PlatformFamily.Windows)
+    {
+      contentFiles.Append(new NuSpecContent{
+        Source = "nuget_contents/IronRe2-Batteries.Windows.targets",
+        Target = $"build/{nuGetPackageId}.targets",
+      });
+    }
     foreach (var file in contentFiles)
     {
         Information("including {0}", file.Dump());
     }
     NuGetPack(new NuGetPackSettings {
-      Id = $"IronRe2-Batteries.{Context.Environment.Platform.Family}",
+      Id = nuGetPackageId,
       Version = versionInfo.NuGetVersionV2,
       Title = "IronRe2 Batteries",
       Authors = new[] { CrispGroupName },
