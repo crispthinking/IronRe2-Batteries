@@ -181,7 +181,7 @@ Task("Pack")
           })
         .ToList();
     Information("Packing for {0}", Context.Environment.Platform.Dump());
-    if (Context.Environment.Platform.Family == PlatformFamily.Windows)
+    if (!Context.Environment.Platform.IsUnix())
     {
       contentFiles.Append(new NuSpecContent{
         Source = "nuget_contents/IronRe2-Batteries.Windows.targets",
