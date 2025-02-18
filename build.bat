@@ -41,7 +41,8 @@ cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Ithirdparty\re2\ ^
   /I"C:\vcpkg\installed\x64-windows\include" ^
   thirdparty\cre2\src\cre2.cpp ^
-  /link bin\re2\Release\re2.lib ^
+  /link /machine:x64 bin\re2\Release\re2.lib ^
+  /LIBPATH:"C:\vcpkg\installed\x64-windows\lib" absl_base.lib absl_raw_logging_internal.lib absl_str_format_internal.lib ^
   /out:%OUTFILE%
 if errorlevel 1 exit /b 1
 
