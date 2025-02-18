@@ -211,3 +211,4 @@ tools/**
 CoverageResults/
 Artifacts/
 DeployArtifacts/
+.DS_Store

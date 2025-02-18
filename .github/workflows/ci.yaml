@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+
+jobs:
+  Linux:
+    runs-on: ubuntu-16.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - run: ./build.sh
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artifacts
+        path: bin/artifacts/
+
+  macOS:
+    runs-on: macos-10.13
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - run: ./build.sh
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artifacts
+        path: bin/artifacts/
+
+  Windows:
+    runs-on: windows-2016
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - run: .\ci_build.bat
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artifacts
+        path: bin/artifacts/
+
+
+
