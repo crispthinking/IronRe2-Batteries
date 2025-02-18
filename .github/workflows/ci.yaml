@@ -28,7 +28,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang jq
+          sudo apt-get install -y libabsl-dev libgtest-dev libbenchmark-dev
 
       - name: Install GitVersion Tool
         run: dotnet tool install -g GitVersion.Tool
@@ -59,7 +59,6 @@ jobs:
           brew update
           brew install gitversion jq nuget
           brew install abseil googletest google-benchmark
-          export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/opt/homebrew/lib/pkgconfig"
 
       - name: Run Build Script
         run: ./build.sh

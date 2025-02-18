@@ -3,6 +3,11 @@ set -euo pipefail
 
 # --- Platform-specific Settings ---
 OS="$(uname)"
+
+if [[ "$OS" == "Darwin" ]]; then
+  export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/opt/homebrew/lib/pkgconfig"
+fi
+
 if [[ "$OS" == "Linux" ]]; then
   DYLIB_EXT="so"
   DYLIB_PREFIX="lib"

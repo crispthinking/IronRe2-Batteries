@@ -25,11 +25,10 @@ $re2BuildDir = "bin\re2"
 New-Item -ItemType Directory -Force -Path $re2BuildDir | Out-Null
 
 # Configure RE2 via CMake.
-cmake -S thirdparty\re2 -B $re2BuildDir -G "Visual Studio 16 2019" -A x64 `
-    -D BUILD_TESTING=OFF -D BUILD_SHARED_LIBS=OFF -D RE2_BUILD_TESTING=OFF
+cmake -S thirdparty\re2 -B $re2BuildDir -G "Visual Studio 17 2022" -A x64 -D BUILD_TESTING=OFF -D BUILD_SHARED_LIBS=OFF -D RE2_BUILD_TESTING=OFF
 
 # Build the generated solution in Release mode.
-msbuild "$re2BuildDir\RE2.sln" /p:Configuration=Release
+cmake --build $re2BuildDir --config Release
 
 # --- Build cre2 (the C FFI interface) ---
 Write-Host "Building cre2..."
