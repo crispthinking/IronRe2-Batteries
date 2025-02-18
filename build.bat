@@ -1,9 +1,8 @@
 @echo off
-REM --- Locate VsDevCmd.bat using vswhere ---
-for /f "usebackq delims=" %%i in (`"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find "Common7\Tools\VsDevCmd.bat"`) do (
-    set "VSDIR=%%i"
-)
-if not defined VSDIR (
+REM --- Locate VsDevCmd.bat ---
+if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" (
+    set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
+) else (
     echo VsDevCmd.bat not found.
     exit /b 1
 )

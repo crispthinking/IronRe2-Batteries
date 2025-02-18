@@ -8,7 +8,7 @@ if [[ "$OS" == "Darwin" ]]; then
   export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/opt/homebrew/include"
 elif [[ "$OS" == "Linux" ]]; then
   export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}"
-  export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/include/absl"
+  export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/include"
 fi
 
 if [[ "$OS" == "Linux" ]]; then
@@ -40,8 +40,11 @@ check_exit() {
 build_re2() {
   echo "=== Building RE2 ==="
   pushd thirdparty/re2 > /dev/null
-  export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/include/absl"
-  # Run make for target "obj/libre2.a" using twice the number of available processors
+  if [[ "$(uname)" == "Darwin" ]]; then
+    export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/opt/homebrew/include"
+  else
+    export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/include/absl"
+  fi
   echo "Running: make obj/libre2.a -j$(( NUM_PROC * 2 ))"
   make obj/libre2.a -j$(( NUM_PROC * 2 ))
   check_exit $?
