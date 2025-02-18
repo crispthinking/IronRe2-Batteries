@@ -39,7 +39,7 @@ cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Dcre2_VERSION_INTERFACE_STRING="\"0.0.0\"" ^
   /Dcre2_decl=__declspec(dllexport) ^
   /Ithirdparty\re2\ ^
-  src\cre2.cpp ^
+  thirdparty\cre2\src\cre2.cpp ^
   /link bin\re2\Release\re2.lib ^
   /out:%OUTFILE%
 if errorlevel 1 exit /b 1

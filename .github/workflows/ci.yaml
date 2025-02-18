@@ -28,8 +28,17 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang jq libabsl-dev libgtest-dev libbenchmark-dev
+          sudo apt-get install -y clang cmake jq libabsl-dev libgtest-dev libbenchmark-dev
 
+      - name: Build and Install Abseil from Source
+        run: |
+          git clone https://github.com/abseil/abseil-cpp.git
+          cd abseil-cpp
+          mkdir build && cd build
+          cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+          make -j$(nproc)
+          sudo make install      
+          
       - name: Install GitVersion Tool
         run: dotnet tool install -g GitVersion.Tool
 
