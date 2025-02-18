@@ -41,8 +41,7 @@ check_exit() {
 build_re2() {
   echo "=== Building RE2 ==="
   pushd thirdparty/re2 > /dev/null
-  # Set flags as in the Cake script
-  export CXXFLAGS="-fPIC -O3 -g"
+  export CXXFLAGS="-std=c++17 -fPIC -O3 -g"
   # Run make for target "obj/libre2.a" using twice the number of available processors
   echo "Running: make obj/libre2.a -j$(( NUM_PROC * 2 ))"
   make obj/libre2.a -j$(( NUM_PROC * 2 ))
@@ -61,7 +60,7 @@ build_cre2() {
   pushd thirdparty/cre2 > /dev/null
   echo "Building with clang++; output: ${OUTFILE}"
   clang++ --verbose \
-    -shared -fpic -std=c++11 -O3 -g -DNDEBUG \
+    -shared -fpic -std=c++17 -O3 -g -DNDEBUG \
     -Dcre2_VERSION_INTERFACE_CURRENT=0 \
     -Dcre2_VERSION_INTERFACE_REVISION=0 \
     -Dcre2_VERSION_INTERFACE_AGE=0 \
