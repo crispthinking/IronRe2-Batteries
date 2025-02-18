@@ -28,8 +28,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          # Install clang++, jq and nuget CLI
-          sudo apt-get install -y clang jq nuget
+          sudo apt-get install -y clang jq
 
       - name: Install GitVersion Tool
         run: dotnet tool install -g GitVersion.Tool
@@ -71,28 +70,28 @@ jobs:
           name: artifacts
           path: bin/artifacts/
 
-  Windows:
-    name: Windows Build
-    runs-on: windows-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          submodules: true
+Windows:
+  name: Windows Build
+  runs-on: windows-latest
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: true
 
-      - name: Install Dependencies via Chocolatey
-        shell: powershell
-        run: |
-          choco install gitversion.portable -y
-          choco install jq -y
-          choco install nuget.commandline -y
+    - name: Install Dependencies via Chocolatey
+      shell: powershell
+      run: |
+        choco install gitversion.portable -y
+        choco install jq -y
+        # nuget CLI is no longer needed since we're using dotnet pack
 
-      - name: Run Build Script
-        shell: pwsh
-        run: ./build.ps1
+    - name: Run Build Script
+      shell: pwsh
+      run: ./build.ps1
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: artifacts
-          path: bin\artifacts\
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artifacts
+        path: bin\artifacts\

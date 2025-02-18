@@ -87,26 +87,6 @@ pack_nuget() {
     exit 1
   fi
 
-pack_nuget() {
-  echo "=== Packing NuGet Package ==="
-  mkdir -p bin/artifacts
-
-  # Retrieve version info using GitVersion (assumes it outputs JSON)
-  if ! command -v gitversion &> /dev/null; then
-    echo "Error: gitversion not found. Please install it." >&2
-    exit 1
-  fi
-  versionInfo=$(gitversion /output json)
-  if ! command -v jq &> /dev/null; then
-    echo "Error: jq is required to parse GitVersion output." >&2
-    exit 1
-  fi
-  version=$(echo "$versionInfo" | jq -r '.NuGetVersionV2')
-  if [[ -z "$version" ]]; then
-    echo "Could not determine version from gitversion output." >&2
-    exit 1
-  fi
-
   # Use dotnet pack on your package project file, passing the version
   dotnet pack BatteryPackage.csproj -c Release -o bin/artifacts/ /p:PackageVersion=${version}
   check_exit $?

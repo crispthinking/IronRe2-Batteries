@@ -1,15 +1,20 @@
 # build.ps1
 Write-Host "Setting up Visual Studio environment..."
 
-# Adjust the path as needed.
-# GitHub Actions Windows runners typically have VS 2019 installed.
-$vsDevCmd = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
-if (-Not (Test-Path $vsDevCmd)) {
-    Write-Error "VsDevCmd.bat not found at $vsDevCmd"
+Write-Host "Locating VsDevCmd.bat using vswhere..."
+
+# Use vswhere to find the VsDevCmd.bat path.
+$vsDevCmd = (& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" `
+    -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+    -find "Common7\Tools\VsDevCmd.bat").Trim()
+
+if (-not (Test-Path $vsDevCmd)) {
+    Write-Error "VsDevCmd.bat not found. Searched path: $vsDevCmd"
     exit 1
 }
 
-# Call the VS Developer Command Prompt to set up environment variables.
+Write-Host "Found VsDevCmd.bat at: $vsDevCmd"
+Write-Host "Setting up Visual Studio environment..."
 & $vsDevCmd
 
 # --- Build RE2 using CMake and MSBuild ---
