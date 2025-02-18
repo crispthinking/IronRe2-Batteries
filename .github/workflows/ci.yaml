@@ -83,6 +83,7 @@ jobs:
         run: |
           choco install gitversion.portable -y
           choco install jq -y
+          vcpkg install abseil
       - name: Run Build Script
         shell: cmd
         run: build.bat

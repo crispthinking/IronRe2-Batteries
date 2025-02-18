@@ -40,11 +40,6 @@ check_exit() {
 build_re2() {
   echo "=== Building RE2 ==="
   pushd thirdparty/re2 > /dev/null
-  if [[ "$(uname)" == "Darwin" ]]; then
-    export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/opt/homebrew/include"
-  else
-    export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/include/absl"
-  fi
   echo "Running: make obj/libre2.a -j$(( NUM_PROC * 2 ))"
   make obj/libre2.a -j$(( NUM_PROC * 2 ))
   check_exit $?

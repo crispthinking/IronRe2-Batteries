@@ -18,7 +18,7 @@ if errorlevel 1 (
 REM --- Build RE2 using CMake ---
 echo Building RE2...
 if not exist "bin\re2" mkdir bin\re2
-cmake -S thirdparty\re2 -B bin\re2 -G "Visual Studio 17 2022" -A x64 -D BUILD_TESTING=OFF -D BUILD_SHARED_LIBS=OFF -D RE2_BUILD_TESTING=OFF
+cmake -S thirdparty\re2 -B bin\re2 -G "Visual Studio 17 2022" -A x64 -D BUILD_TESTING=OFF -D BUILD_SHARED_LIBS=OFF -D RE2_BUILD_TESTING=OFF -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
 if errorlevel 1 exit /b 1
 
 cmake --build bin\re2 --config Release
