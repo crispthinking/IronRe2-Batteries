@@ -85,7 +85,7 @@ jobs:
           choco install jq -y
       - name: Run Build Script
         shell: cmd
-        run: ./build.bat
+        run: build.bat
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
