@@ -1,13 +1,13 @@
 @echo off
 REM --- Locate VsDevCmd.bat using vswhere ---
-for /f "usebackq tokens=*" %%i in (`"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find "Common7\Tools\VsDevCmd.bat"`) do (
+for /f "usebackq delims=" %%i in (`"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find "Common7\Tools\VsDevCmd.bat"`) do (
     set "VSDIR=%%i"
 )
 if not defined VSDIR (
     echo VsDevCmd.bat not found.
     exit /b 1
 )
-echo Found VsDevCmd.bat at %VSDIR%
+echo Found VsDevCmd.bat at "%VSDIR%"
 
 REM --- Set up the Visual Studio environment ---
 call "%VSDIR%"
@@ -33,8 +33,7 @@ set "DYLIB_EXT=dll"
 set "OUTFILE=bin\contents\runtimes\%RID%\native\cre2.%DYLIB_EXT%"
 if not exist "bin\contents\runtimes\%RID%\native" mkdir "bin\contents\runtimes\%RID%\native"
 
-REM Compile cre2; adjust paths if needed.
-cl.exe /EHsc /std:c++14 /LD /MD /O2 /DNDEBUG ^
+cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Dcre2_VERSION_INTERFACE_CURRENT=0 ^
   /Dcre2_VERSION_INTERFACE_REVISION=0 ^
   /Dcre2_VERSION_INTERFACE_AGE=0 ^
@@ -48,9 +47,8 @@ if errorlevel 1 exit /b 1
 
 REM --- Package with dotnet pack ---
 echo Packaging NuGet package...
-REM Get version information from GitVersion and parse with jq (assumes both are in PATH)
 gitversion /output json > gitversion.json
-for /f "usebackq tokens=*" %%i in (`jq -r ".NuGetVersionV2" gitversion.json`) do set "VERSION=%%i"
+for /f "usebackq delims=" %%i in (`jq -r ".NuGetVersionV2" gitversion.json`) do set "VERSION=%%i"
 if "%VERSION%"=="" (
     echo Failed to retrieve version from GitVersion.
     exit /b 1
