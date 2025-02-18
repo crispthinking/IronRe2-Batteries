@@ -59,6 +59,8 @@ jobs:
         run: |
           brew update
           brew install gitversion jq nuget
+          brew install abseil googletest google-benchmark
+          export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/opt/homebrew/lib/pkgconfig"
 
       - name: Run Build Script
         run: ./build.sh
@@ -86,7 +88,7 @@ jobs:
           choco install nuget.commandline -y
 
       - name: Run Build Script
-        run: .\ci_build.bat
+        run: ./build.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
