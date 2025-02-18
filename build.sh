@@ -9,6 +9,10 @@ if [[ "$OS" == "Darwin" ]]; then
 fi
 
 if [[ "$OS" == "Linux" ]]; then
+  export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH"
+fi
+
+if [[ "$OS" == "Linux" ]]; then
   DYLIB_EXT="so"
   DYLIB_PREFIX="lib"
   RID="linux-x64"

@@ -28,7 +28,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libabsl-dev libgtest-dev libbenchmark-dev
+          sudo apt-get install -y clang jq libabsl-dev libgtest-dev libbenchmark-dev
 
       - name: Install GitVersion Tool
         run: dotnet tool install -g GitVersion.Tool
@@ -84,8 +84,8 @@ jobs:
           choco install gitversion.portable -y
           choco install jq -y
       - name: Run Build Script
-        shell: pwsh
-        run: ./build.ps1
+        shell: cmd
+        run: ./build.bat
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
