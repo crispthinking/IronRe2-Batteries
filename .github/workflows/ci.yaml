@@ -1,5 +1,6 @@
 name: CI
 
+# Trigger on pushes and pull requests to the main branch.
 on:
   push:
     branches:
@@ -8,6 +9,7 @@ on:
     branches:
       - main
 
+# Set permissions for the workflow.
 permissions:
   contents: write
   pull-requests: write
@@ -15,43 +17,55 @@ permissions:
 
 jobs:
   Linux:
-    runs-on: ubuntu-16.04
+    name: Linux Build
+    runs-on: ubuntu-latest  # Updated from ubuntu-16.04 to ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - run: ./build.sh
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: artifacts
-        path: bin/artifacts/
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Run Build Script
+        run: ./build.sh
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: bin/artifacts/
 
   macOS:
-    runs-on: macos-10.13
+    name: macOS Build
+    runs-on: macos-latest  # Updated from macos-10.13 to macos-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - run: ./build.sh
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: artifacts
-        path: bin/artifacts/
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Run Build Script
+        run: ./build.sh
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: bin/artifacts/
 
   Windows:
-    runs-on: windows-2016
+    name: Windows Build
+    runs-on: windows-latest  # Updated from windows-2016 to windows-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - run: .\ci_build.bat
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: artifacts
-        path: bin/artifacts/
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
 
+      - name: Run Build Script
+        run: .\ci_build.bat
 
-
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: bin/artifacts/
