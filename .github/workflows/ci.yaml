@@ -18,12 +18,24 @@ permissions:
 jobs:
   Linux:
     name: Linux Build
-    runs-on: ubuntu-latest  # Updated from ubuntu-16.04 to ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          # Install clang++, jq and nuget CLI
+          sudo apt-get install -y clang jq nuget
+
+      - name: Install GitVersion Tool
+        run: dotnet tool install -g GitVersion.Tool
+
+      - name: Add .dotnet Tools to PATH
+        run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
 
       - name: Run Build Script
         run: ./build.sh
@@ -36,12 +48,17 @@ jobs:
 
   macOS:
     name: macOS Build
-    runs-on: macos-latest  # Updated from macos-10.13 to macos-latest
+    runs-on: macos-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Install Dependencies via Homebrew
+        run: |
+          brew update
+          brew install gitversion jq nuget
 
       - name: Run Build Script
         run: ./build.sh
@@ -54,12 +71,19 @@ jobs:
 
   Windows:
     name: Windows Build
-    runs-on: windows-latest  # Updated from windows-2016 to windows-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Install Dependencies via Chocolatey
+        shell: powershell
+        run: |
+          choco install gitversion.portable -y
+          choco install jq -y
+          choco install nuget.commandline -y
 
       - name: Run Build Script
         run: .\ci_build.bat

@@ -1,117 +1,160 @@
-#!/usr/bin/env bash
+#!/bin/bash
+set -euo pipefail
 
-##########################################################################
-# This is the Cake bootstrapper script for Linux and OS X.
-# This file was downloaded from https://github.com/cake-build/resources
-# Feel free to change this file to fit your needs.
-##########################################################################
-
-# Define directories.
-SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-TOOLS_DIR=$SCRIPT_DIR/tools
-ADDINS_DIR=$TOOLS_DIR/Addins
-MODULES_DIR=$TOOLS_DIR/Modules
-NUGET_EXE=$TOOLS_DIR/nuget.exe
-CAKE_EXE=$TOOLS_DIR/Cake/Cake.exe
-PACKAGES_CONFIG=$TOOLS_DIR/packages.config
-PACKAGES_CONFIG_MD5=$TOOLS_DIR/packages.config.md5sum
-ADDINS_PACKAGES_CONFIG=$ADDINS_DIR/packages.config
-MODULES_PACKAGES_CONFIG=$MODULES_DIR/packages.config
-
-# Define md5sum or md5 depending on Linux/OSX
-MD5_EXE=
-if [[ "$(uname -s)" == "Darwin" ]]; then
-    MD5_EXE="md5 -r"
+# --- Platform-specific Settings ---
+OS="$(uname)"
+if [[ "$OS" == "Linux" ]]; then
+  DYLIB_EXT="so"
+  DYLIB_PREFIX="lib"
+  RID="linux-x64"
+  NUM_PROC=$(nproc)
+elif [[ "$OS" == "Darwin" ]]; then
+  DYLIB_EXT="dylib"
+  DYLIB_PREFIX="lib"
+  RID="osx-x64"
+  NUM_PROC=$(sysctl -n hw.logicalcpu)
 else
-    MD5_EXE="md5sum"
+  echo "This build script currently supports only Linux and macOS."
+  exit 1
 fi
 
-# Define default arguments.
-SCRIPT="build.cake"
-CAKE_ARGUMENTS=()
+CRISP_GROUP="Crisp Thinking Group Ltd."
 
-# Parse arguments.
-for i in "$@"; do
-    case $1 in
-        -s|--script) SCRIPT="$2"; shift ;;
-        --) shift; CAKE_ARGUMENTS+=("$@"); break ;;
-        *) CAKE_ARGUMENTS+=("$1") ;;
-    esac
-    shift
-done
+# --- Helper Functions ---
+check_exit() {
+  if [ "$1" -ne 0 ]; then
+    echo "Process exited with code $1" >&2
+    exit $1
+  fi
+}
 
-# Make sure the tools folder exist.
-if [ ! -d "$TOOLS_DIR" ]; then
-  mkdir "$TOOLS_DIR"
-fi
+# --- Build RE2 ---
+build_re2() {
+  echo "=== Building RE2 ==="
+  pushd thirdparty/re2 > /dev/null
+  # Set flags as in the Cake script
+  export CXXFLAGS="-fPIC -O3 -g"
+  # Run make for target "obj/libre2.a" using twice the number of available processors
+  echo "Running: make obj/libre2.a -j$(( NUM_PROC * 2 ))"
+  make obj/libre2.a -j$(( NUM_PROC * 2 ))
+  check_exit $?
+  popd > /dev/null
+}
 
-# Make sure that packages.config exist.
-if [ ! -f "$TOOLS_DIR/packages.config" ]; then
-    echo "Downloading packages.config..."
-    curl -Lsfo "$TOOLS_DIR/packages.config" https://cakebuild.net/download/bootstrapper/packages
-    if [ $? -ne 0 ]; then
-        echo "An error occurred while downloading packages.config."
-        exit 1
-    fi
-fi
+# --- Build cre2 (the C FFI interface) ---
+build_cre2() {
+  echo "=== Building cre2 ==="
+  # Compute the output file path:
+  # bin/contents/runtimes/${RID}/native/${DYLIB_PREFIX}cre2.${DYLIB_EXT}
+  OUTFILE="bin/contents/runtimes/${RID}/native/${DYLIB_PREFIX}cre2.${DYLIB_EXT}"
+  mkdir -p "$(dirname "$OUTFILE")"
 
-# Download NuGet if it does not exist.
-if [ ! -f "$NUGET_EXE" ]; then
-    echo "Downloading NuGet..."
-    curl -Lsfo "$NUGET_EXE" https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-    if [ $? -ne 0 ]; then
-        echo "An error occurred while downloading nuget.exe."
-        exit 1
-    fi
-fi
+  pushd thirdparty/cre2 > /dev/null
+  echo "Building with clang++; output: ${OUTFILE}"
+  clang++ --verbose \
+    -shared -fpic -std=c++11 -O3 -g -DNDEBUG \
+    -Dcre2_VERSION_INTERFACE_CURRENT=0 \
+    -Dcre2_VERSION_INTERFACE_REVISION=0 \
+    -Dcre2_VERSION_INTERFACE_AGE=0 \
+    -Dcre2_VERSION_INTERFACE_STRING="\"0.0.0\"" \
+    -I../re2/ \
+    src/cre2.cpp \
+    ../re2/obj/libre2.a \
+    -o "${OUTFILE}"
+  check_exit $?
+  popd > /dev/null
+}
 
-# Restore tools from NuGet.
-pushd "$TOOLS_DIR" >/dev/null
-if [ ! -f "$PACKAGES_CONFIG_MD5" ] || [ "$( cat "$PACKAGES_CONFIG_MD5" | sed 's/\r$//' )" != "$( $MD5_EXE "$PACKAGES_CONFIG" | awk '{ print $1 }' )" ]; then
-    find . -type d ! -name . ! -name 'Cake.Bakery' | xargs rm -rf
-fi
+# --- Package into a NuGet Battery Pack ---
+pack_nuget() {
+  echo "=== Packing NuGet Package ==="
+  mkdir -p bin/artifacts
 
-mono "$NUGET_EXE" install -ExcludeVersion
-if [ $? -ne 0 ]; then
-    echo "Could not restore NuGet tools."
+  # Retrieve version info using GitVersion (assumes it outputs JSON)
+  if ! command -v gitversion &> /dev/null; then
+    echo "Error: gitversion not found. Please install it." >&2
     exit 1
-fi
-
-$MD5_EXE "$PACKAGES_CONFIG" | awk '{ print $1 }' >| "$PACKAGES_CONFIG_MD5"
-
-popd >/dev/null
-
-# Restore addins from NuGet.
-if [ -f "$ADDINS_PACKAGES_CONFIG" ]; then
-    pushd "$ADDINS_DIR" >/dev/null
-
-    mono "$NUGET_EXE" install -ExcludeVersion
-    if [ $? -ne 0 ]; then
-        echo "Could not restore NuGet addins."
-        exit 1
-    fi
-
-    popd >/dev/null
-fi
-
-# Restore modules from NuGet.
-if [ -f "$MODULES_PACKAGES_CONFIG" ]; then
-    pushd "$MODULES_DIR" >/dev/null
-
-    mono "$NUGET_EXE" install -ExcludeVersion
-    if [ $? -ne 0 ]; then
-        echo "Could not restore NuGet modules."
-        exit 1
-    fi
-
-    popd >/dev/null
-fi
-
-# Make sure that Cake has been installed.
-if [ ! -f "$CAKE_EXE" ]; then
-    echo "Could not find Cake.exe at '$CAKE_EXE'."
+  fi
+  versionInfo=$(gitversion /output json)
+  # Requires 'jq' to parse JSON
+  if ! command -v jq &> /dev/null; then
+    echo "Error: jq is required to parse GitVersion output." >&2
     exit 1
-fi
+  fi
+  version=$(echo "$versionInfo" | jq -r '.NuGetVersionV2')
+  if [[ -z "$version" ]]; then
+    echo "Could not determine version from gitversion output." >&2
+    exit 1
+  fi
 
-# Start Cake
-exec mono "$CAKE_EXE" $SCRIPT "${CAKE_ARGUMENTS[@]}"
+  # Create a .nuspec file on the fly
+  NUSPEC_FILE="IronRe2-Batteries.${RID}.nuspec"
+  cat > "$NUSPEC_FILE" <<EOF
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>IronRe2-Batteries.${RID}</id>
+    <version>${version}</version>
+    <title>IronRe2 Batteries</title>
+    <authors>${CRISP_GROUP}</authors>
+    <owners>${CRISP_GROUP}</owners>
+    <description>Platform-specific NuGet package containing RE2 and the cre2 wrapper</description>
+    <summary>Native code dependency of IronRe2</summary>
+    <projectUrl>https://github.com/crispthinking/IronRe2-Batteries/</projectUrl>
+    <licenseUrl>https://github.com/crispthinking/IronRe2-Batteries/blob/master/LICENSE</licenseUrl>
+    <copyright>${CRISP_GROUP} 2019</copyright>
+    <tags>Regex Re2</tags>
+    <dependencies>
+      <dependency id="NETStandard.Library" version="1.6.1" targetFramework=".NETStandard1.0" />
+    </dependencies>
+  </metadata>
+  <files>
+EOF
+
+  # Include all files from bin/contents (preserving relative paths)
+  CONTENTS_PATH=$(realpath bin/contents)
+  while IFS= read -r -d '' file; do
+    # Calculate relative path from CONTENTS_PATH
+    relPath=$(realpath --relative-to="$CONTENTS_PATH" "$file")
+    echo "    <file src=\"${file}\" target=\"${relPath}\" />" >> "$NUSPEC_FILE"
+  done < <(find "$CONTENTS_PATH" -type f -print0)
+
+  echo "  </files>" >> "$NUSPEC_FILE"
+  echo "</package>" >> "$NUSPEC_FILE"
+
+  # Pack the NuGet package using the nuget CLI
+  if ! command -v nuget &> /dev/null; then
+    echo "Error: nuget CLI not found. Please install it." >&2
+    exit 1
+  fi
+
+  nuget pack "$NUSPEC_FILE" -OutputDirectory bin/artifacts/
+  check_exit $?
+  rm "$NUSPEC_FILE"
+}
+
+# --- Clean Build Artifacts ---
+clean() {
+  echo "=== Cleaning Build Artifacts ==="
+  rm -rf bin/
+  pushd thirdparty/re2 > /dev/null
+  make clean
+  popd > /dev/null
+}
+
+# --- Main ---
+main() {
+  TARGET="${1:-Default}"
+  case "$TARGET" in
+    Clean)
+      clean
+      ;;
+    *)
+      build_re2
+      build_cre2
+      pack_nuget
+      ;;
+  esac
+}
+
+main "$@"
