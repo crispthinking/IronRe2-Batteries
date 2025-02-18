@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <PackageId>IronRe2-Batteries</PackageId>
+        <Authors>Crisp Thinking Group Ltd.</Authors>
+        <Owners>Crisp Thinking Group Ltd.</Owners>
+        <PackageDescription>Platform-specific NuGet package containing RE2 and the cre2 wrapper</PackageDescription>
+        <PackageTags>Regex;Re2</PackageTags>
+        <Copyright>Crisp Thinking Group Ltd. 2019</Copyright>
+    </PropertyGroup>
+</Project>

@@ -88,10 +88,11 @@ jobs:
           choco install nuget.commandline -y
 
       - name: Run Build Script
-        run: ./build.sh
+        shell: pwsh
+        run: ./build.ps1
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: artifacts
-          path: bin/artifacts/
+          path: bin\artifacts\

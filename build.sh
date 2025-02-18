@@ -87,50 +87,29 @@ pack_nuget() {
     exit 1
   fi
 
-  # Create a .nuspec file on the fly
-  NUSPEC_FILE="IronRe2-Batteries.${RID}.nuspec"
-  cat > "$NUSPEC_FILE" <<EOF
-<?xml version="1.0"?>
-<package>
-  <metadata>
-    <id>IronRe2-Batteries.${RID}</id>
-    <version>${version}</version>
-    <title>IronRe2 Batteries</title>
-    <authors>${CRISP_GROUP}</authors>
-    <owners>${CRISP_GROUP}</owners>
-    <description>Platform-specific NuGet package containing RE2 and the cre2 wrapper</description>
-    <summary>Native code dependency of IronRe2</summary>
-    <projectUrl>https://github.com/crispthinking/IronRe2-Batteries/</projectUrl>
-    <licenseUrl>https://github.com/crispthinking/IronRe2-Batteries/blob/master/LICENSE</licenseUrl>
-    <copyright>${CRISP_GROUP} 2019</copyright>
-    <tags>Regex Re2</tags>
-    <dependencies>
-      <dependency id="NETStandard.Library" version="1.6.1" targetFramework=".NETStandard1.0" />
-    </dependencies>
-  </metadata>
-  <files>
-EOF
+pack_nuget() {
+  echo "=== Packing NuGet Package ==="
+  mkdir -p bin/artifacts
 
-  # Include all files from bin/contents (preserving relative paths)
-  CONTENTS_PATH=$(realpath bin/contents)
-  while IFS= read -r -d '' file; do
-    # Calculate relative path from CONTENTS_PATH
-    relPath=$(realpath --relative-to="$CONTENTS_PATH" "$file")
-    echo "    <file src=\"${file}\" target=\"${relPath}\" />" >> "$NUSPEC_FILE"
-  done < <(find "$CONTENTS_PATH" -type f -print0)
-
-  echo "  </files>" >> "$NUSPEC_FILE"
-  echo "</package>" >> "$NUSPEC_FILE"
-
-  # Pack the NuGet package using the nuget CLI
-  if ! command -v nuget &> /dev/null; then
-    echo "Error: nuget CLI not found. Please install it." >&2
+  # Retrieve version info using GitVersion (assumes it outputs JSON)
+  if ! command -v gitversion &> /dev/null; then
+    echo "Error: gitversion not found. Please install it." >&2
+    exit 1
+  fi
+  versionInfo=$(gitversion /output json)
+  if ! command -v jq &> /dev/null; then
+    echo "Error: jq is required to parse GitVersion output." >&2
+    exit 1
+  fi
+  version=$(echo "$versionInfo" | jq -r '.NuGetVersionV2')
+  if [[ -z "$version" ]]; then
+    echo "Could not determine version from gitversion output." >&2
     exit 1
   fi
 
-  nuget pack "$NUSPEC_FILE" -OutputDirectory bin/artifacts/
+  # Use dotnet pack on your package project file, passing the version
+  dotnet pack BatteryPackage.csproj -c Release -o bin/artifacts/ /p:PackageVersion=${version}
   check_exit $?
-  rm "$NUSPEC_FILE"
 }
 
 # --- Clean Build Artifacts ---
