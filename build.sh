@@ -63,6 +63,7 @@ build_cre2() {
     -Dcre2_VERSION_INTERFACE_AGE=0 \
     -Dcre2_VERSION_INTERFACE_STRING="\"0.0.0\"" \
     -I../re2/ \
+    -I/opt/homebrew/Cellar/abseil/20240722.1/include \
     src/cre2.cpp \
     ../re2/obj/libre2.a \
     -o "${OUTFILE}"
