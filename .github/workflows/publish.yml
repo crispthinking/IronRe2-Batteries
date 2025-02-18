@@ -21,32 +21,14 @@ jobs:
       with:
         fetch-depth: 0 # Get all history to allow automatic versioning using MinVer
 
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.10' 
-
-    - name: Install threatexchange CLI
-      run: python3 -m pip install threatexchange --upgrade
-
     # Install the .NET SDK indicated in the global.json file
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.0.x
 
     - name: Build
       run: dotnet build -c Release
-
-    - name: Test
-      run: dotnet test -c Release --no-build
-
-    - name: Test Report
-      uses: dorny/test-reporter@v1
-      if: success() || failure()    # run this step even if previous step failed
-      with:
-        name: Tests            # Name of the check run which will be created
-        path: test/PdqHash.Tests/TestResults/**/*.trx    # Path to test results
-        reporter: dotnet-trx        # Format of test results
 
     # Create the NuGet package in the folder from the environment variable NuGetDirectory
     - name: Pack

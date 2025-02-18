@@ -49,7 +49,9 @@ build_re2() {
 # --- Build cre2 (the C FFI interface) ---
 build_cre2() {
   echo "=== Building cre2 ==="
-  OUTFILE="bin/contents/runtimes/${RID}/native/${DYLIB_PREFIX}cre2.${DYLIB_EXT}"
+  # Use an absolute path for the output file
+  OUTFILE="$PWD/bin/contents/runtimes/${RID}/native/${DYLIB_PREFIX}cre2.${DYLIB_EXT}"
+  echo "Output file will be: ${OUTFILE}"
   mkdir -p "$(dirname "$OUTFILE")"
 
   # Set Abseil include and library flags based on OS.
