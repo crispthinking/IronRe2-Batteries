@@ -8,8 +8,8 @@ if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools
 )
 echo Found VsDevCmd.bat at "%VSDIR%"
 
-REM --- Set up the Visual Studio environment ---
-call "%VSDIR%"
+REM --- Set up the Visual Studio environment for x64 ---
+call "%VSDIR%" -arch=x64
 if errorlevel 1 (
     echo Failed to initialize VS environment.
     exit /b 1

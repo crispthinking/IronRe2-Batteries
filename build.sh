@@ -49,10 +49,18 @@ build_re2() {
 # --- Build cre2 (the C FFI interface) ---
 build_cre2() {
   echo "=== Building cre2 ==="
-  # Compute the output file path:
-  # bin/contents/runtimes/${RID}/native/${DYLIB_PREFIX}cre2.${DYLIB_EXT}
   OUTFILE="bin/contents/runtimes/${RID}/native/${DYLIB_PREFIX}cre2.${DYLIB_EXT}"
   mkdir -p "$(dirname "$OUTFILE")"
+
+  # Set Abseil include and library flags based on OS.
+  if [[ "$OS" == "Linux" ]]; then
+    # Adjust these paths if your Linux system installs Abseil elsewhere.
+    ABSEIL_INCLUDE="-I/usr/include/absl"
+    ABSEIL_LIB="-L/usr/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
+  elif [[ "$OS" == "Darwin" ]]; then
+    ABSEIL_INCLUDE="-I/opt/homebrew/Cellar/abseil/20240722.1/include"
+    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
+  fi
 
   pushd thirdparty/cre2 > /dev/null
   echo "Building with clang++; output: ${OUTFILE}"
@@ -63,9 +71,10 @@ build_cre2() {
     -Dcre2_VERSION_INTERFACE_AGE=0 \
     -Dcre2_VERSION_INTERFACE_STRING="\"0.0.0\"" \
     -I../re2/ \
-    -I/opt/homebrew/Cellar/abseil/20240722.1/include \
+    ${ABSEIL_INCLUDE} \
     src/cre2.cpp \
     ../re2/obj/libre2.a \
+    ${ABSEIL_LIB} \
     -o "${OUTFILE}"
   check_exit $?
   popd > /dev/null
