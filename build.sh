@@ -63,8 +63,8 @@ build_cre2() {
     ABSEIL_LIB="-L/usr/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
   elif [[ "$OS" == "Darwin" ]]; then
     ABSEIL_INCLUDE="-I/opt/homebrew/Cellar/abseil/20240722.1/include"
-    # Added absl_synchronization to fix missing spinlock and related symbols on arm64.
-    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal -labsl_synchronization"
+    # Add more Abseil libraries to resolve missing symbols on arm64.
+    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal -labsl_synchronization -labsl_time -labsl_strings"
   fi
 
   pushd thirdparty/cre2 > /dev/null
@@ -90,11 +90,14 @@ pack_nuget() {
   echo "=== Packing NuGet Package ==="
   mkdir -p bin/artifacts
 
-  # Retrieve version info using GitVersion (assumes it outputs JSON)
+  # Check if gitversion is installed; if not, install it
   if ! command -v gitversion &> /dev/null; then
-    echo "Error: gitversion not found. Please install it." >&2
-    exit 1
+    echo "GitVersion not found. Installing GitVersion.Tool..."
+    dotnet tool install -g GitVersion.Tool || { echo "Failed to install GitVersion.Tool"; exit 1; }
+    # Add dotnet tools to PATH (assuming default install location)
+    export PATH="$PATH:$HOME/.dotnet/tools"
   fi
+
   versionInfo=$(gitversion /output json)
   # Requires 'jq' to parse JSON
   if ! command -v jq &> /dev/null; then
