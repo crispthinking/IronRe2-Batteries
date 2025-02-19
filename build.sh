@@ -56,21 +56,17 @@ build_cre2() {
   echo "Output file will be: ${OUTFILE}"
   mkdir -p "$(dirname "$OUTFILE")"
 
+  # Initialize variables to avoid unbound variable errors.
+  ABSEIL_LIB=""
+  ABSEIL_INCLUDE=""
+
   # Set Abseil include and library flags based on OS.
   if [[ "$OS" == "Linux" ]]; then
-    # Adjust these paths if your Linux system installs Abseil elsewhere.
     ABSEIL_INCLUDE="-I/usr/include/absl"
     ABSEIL_LIB="-L/usr/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
   elif [[ "$OS" == "Darwin" ]]; then
     ABSEIL_INCLUDE="-I/opt/homebrew/Cellar/abseil/20240722.1/include"
-    # Dynamically build the linker flags for all Abseil libraries found in /opt/homebrew/lib.
-    ABSEIL_LIB_FLAGS=""
-    for lib in /opt/homebrew/lib/libabsl_*.dylib; do
-      libname=$(basename "$lib" .dylib)
-      # Remove the "lib" prefix to form the -l flag value.
-      libname=${libname#lib}
-      ABSEIL_LIB_FLAGS="$ABSEIL_LIB_FLAGS -l$libname"
-    done
+    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_log_internal -labsl_raw_logging_internal -labsl_str_format_internal -labsl_synchronization -labsl_time -labsl_strings -labsl_base -labsl_flags -labsl_flags_parse"
   fi
 
   pushd thirdparty/cre2 > /dev/null
@@ -91,7 +87,6 @@ build_cre2() {
   popd > /dev/null
 }
 
-# --- Package into a NuGet Battery Pack ---
 pack_nuget() {
   echo "=== Packing NuGet Package ==="
   mkdir -p bin/artifacts
@@ -100,8 +95,9 @@ pack_nuget() {
   dotnet tool update -g GitVersion.Tool || dotnet tool install -g GitVersion.Tool || true
   export PATH="$HOME/.dotnet/tools:$PATH"
 
-  # Use dotnet tool run to invoke gitversion.
-  versionInfo=$(dotnet tool run gitversion /output json)
+  # Run GitVersion directly by full path
+  versionInfo=$("$HOME/.dotnet/tools/gitversion" /output json)
+  
   # Requires 'jq' to parse JSON
   if ! command -v jq &> /dev/null; then
     echo "Error: jq is required to parse GitVersion output." >&2
