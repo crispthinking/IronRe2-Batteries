@@ -94,10 +94,6 @@ jobs:
           choco install jq -y
           vcpkg install abseil
 
-      - name: List Abseil Libraries
-        shell: cmd
-        run: dir "C:\vcpkg\installed\x64-windows\lib\absl_base*"
-
       - name: Run Build Script
         shell: cmd
         run: build.bat
