@@ -56,17 +56,24 @@ build_cre2() {
   echo "Output file will be: ${OUTFILE}"
   mkdir -p "$(dirname "$OUTFILE")"
 
-  # Initialize variables to avoid unbound variable errors.
+  # Initialize variables.
   ABSEIL_LIB=""
   ABSEIL_INCLUDE=""
 
-  # Set Abseil include and library flags based on OS.
+  # Set Abseil include path (adjust as needed).
   if [[ "$OS" == "Linux" ]]; then
     ABSEIL_INCLUDE="-I/usr/include/absl"
     ABSEIL_LIB="-L/usr/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
   elif [[ "$OS" == "Darwin" ]]; then
     ABSEIL_INCLUDE="-I/opt/homebrew/Cellar/abseil/20240722.1/include"
-    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_log_internal -labsl_raw_logging_internal -labsl_str_format_internal -labsl_synchronization -labsl_time -labsl_strings -labsl_base -labsl_flags -labsl_flags_parse"
+    # Dynamically collect all Abseil libraries from Homebrew's lib folder.
+    ABSEIL_LIB_DIR="/opt/homebrew/lib"
+    ABSEIL_LIBS=""
+    for lib in "$ABSEIL_LIB_DIR"/libabsl_*.dylib; do
+      libname=$(basename "$lib" .dylib)
+      ABSEIL_LIBS="$ABSEIL_LIBS -l$libname"
+    done
+    ABSEIL_LIB="-L$ABSEIL_LIB_DIR $ABSEIL_LIBS"
   fi
 
   pushd thirdparty/cre2 > /dev/null

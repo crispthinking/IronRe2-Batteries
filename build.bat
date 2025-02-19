@@ -20,7 +20,6 @@ echo Building RE2...
 if not exist "bin\re2" mkdir bin\re2
 cmake -S thirdparty\re2 -B bin\re2 -G "Visual Studio 17 2022" -A x64 -D BUILD_TESTING=OFF -D BUILD_SHARED_LIBS=OFF -D RE2_BUILD_TESTING=OFF -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
 if errorlevel 1 exit /b 1
-
 cmake --build bin\re2 --config Release
 if errorlevel 1 exit /b 1
 
@@ -43,7 +42,7 @@ for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
 echo Abseil libraries found: !ABSEIL_LIBS!
 endlocal & set "ABSEIL_LIBS=%ABSEIL_LIBS%"
 
-rem Now run the linker command using the discovered libraries.
+rem Now run the link command.
 cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Dcre2_VERSION_INTERFACE_CURRENT=0 ^
   /Dcre2_VERSION_INTERFACE_REVISION=0 ^
@@ -66,7 +65,6 @@ if "%VERSION%"=="" (
     echo Failed to retrieve version from GitVersion.
     exit /b 1
 )
-
 dotnet pack BatteryPackage.csproj -c Release -o bin\artifacts /p:PackageVersion=%VERSION%
 if errorlevel 1 exit /b 1
 

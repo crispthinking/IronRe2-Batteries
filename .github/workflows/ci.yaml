@@ -40,7 +40,9 @@ jobs:
           sudo make install      
           
       - name: Install GitVersion Tool
-        run: dotnet tool install -g GitVersion.Tool
+        run: |
+          dotnet tool install GitVersion.Tool --tool-path "$HOME/.dotnet/tools"
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
       - name: Add .dotnet Tools to PATH
         run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
