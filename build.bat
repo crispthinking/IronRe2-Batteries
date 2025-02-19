@@ -53,8 +53,10 @@ for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
     set "ABSEIL_LIBS=!ABSEIL_LIBS! %%~nxf"
 )
 echo Abseil libraries found: !ABSEIL_LIBS!
-rem End delayed expansion and set the variable for later use.
-endlocal & set "ABSEIL_LIBS=%ABSEIL_LIBS%"
+REM Save the discovered libraries into a temporary variable before ending the local block.
+set "TEMP_ABSEIL_LIBS=!ABSEIL_LIBS!"
+endlocal
+set "ABSEIL_LIBS=%TEMP_ABSEIL_LIBS%"
 
 REM --- Invoke the compiler/linker ---
 cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
