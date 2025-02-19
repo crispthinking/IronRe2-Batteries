@@ -63,7 +63,7 @@ build_cre2() {
     ABSEIL_LIB="-L/usr/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
   elif [[ "$OS" == "Darwin" ]]; then
     ABSEIL_INCLUDE="-I/opt/homebrew/Cellar/abseil/20240722.1/include"
-    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal -labsl_synchronization -labsl_time -labsl_strings -labsl_log_internal"
+    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_log_internal -labsl_raw_logging_internal -labsl_str_format_internal -labsl_synchronization -labsl_time -labsl_strings -labsl_base -labsl_flags -labsl_flags_parse"
   fi
 
   pushd thirdparty/cre2 > /dev/null
@@ -89,13 +89,11 @@ pack_nuget() {
   echo "=== Packing NuGet Package ==="
   mkdir -p bin/artifacts
 
-  # Check if gitversion is installed; if not, install it
-  if ! command -v gitversion &> /dev/null; then
-    echo "GitVersion not found. Installing GitVersion.Tool..."
-    dotnet tool install -g GitVersion.Tool || { echo "Failed to install GitVersion.Tool"; exit 1; }
-    # Add dotnet tools to PATH (assuming default install location)
-    export PATH="$PATH:$HOME/.dotnet/tools"
-  fi
+  # Ensure GitVersion.Tool is installed/updated.
+  # This command will update the tool if it's already installed,
+  # and install it if it's not.
+  dotnet tool update -g GitVersion.Tool || dotnet tool install -g GitVersion.Tool || true
+  export PATH="$HOME/.dotnet/tools:$PATH"
 
   versionInfo=$(gitversion /output json)
   # Requires 'jq' to parse JSON
