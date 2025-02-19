@@ -1,6 +1,4 @@
 @echo off
-setlocal EnableDelayedExpansion
-
 REM --- Locate VsDevCmd.bat ---
 if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" (
     set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
@@ -16,6 +14,9 @@ if errorlevel 1 (
     echo Failed to initialize VS environment.
     exit /b 1
 )
+
+REM At this point cl.exe (and other VS tools) should be on the PATH.
+REM You can verify by running: where cl.exe
 
 REM --- Build RE2 using CMake ---
 echo Building RE2...
@@ -34,14 +35,14 @@ set "OUTFILE=bin\contents\runtimes\%RID%\native\cre2.%DYLIB_EXT%"
 if not exist "bin\contents\runtimes\%RID%\native" mkdir "bin\contents\runtimes\%RID%\native"
 
 REM --- Dynamically discover Abseil libraries from vcpkg ---
+setlocal EnableDelayedExpansion
 set "ABSEIL_LIB_DIR=C:\vcpkg\installed\x64-windows\lib"
 set "ABSEIL_LIBS="
 for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
-    rem Append the full filename (with extension) to ABSEIL_LIBS.
+    rem Append the filename (with extension) to ABSEIL_LIBS.
     set "ABSEIL_LIBS=!ABSEIL_LIBS! %%~nxf"
 )
 echo Abseil libraries found: !ABSEIL_LIBS!
-rem End delayed expansion and set the variable for later use.
 endlocal & set "ABSEIL_LIBS=%ABSEIL_LIBS%"
 
 REM --- Invoke the compiler/linker ---
