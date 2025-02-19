@@ -1,23 +1,21 @@
 @echo off
-setlocal EnableDelayedExpansion
-
-REM --- Locate VsDevCmd.bat ---
-if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" (
-    set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
-) else (
+REM --- Set up Visual Studio environment for x64 (without delayed expansion) ---
+set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
+if not exist "%VSDIR%" (
     echo VsDevCmd.bat not found.
     exit /b 1
 )
 echo Found VsDevCmd.bat at "%VSDIR%"
-
-REM --- Set up the Visual Studio environment for x64 ---
 call "%VSDIR%" -arch=x64
 if errorlevel 1 (
     echo Failed to initialize VS environment.
     exit /b 1
 )
 
-REM --- Verify that cl.exe is now available ---
+REM --- Now enable delayed expansion for subsequent operations ---
+setlocal EnableDelayedExpansion
+
+REM --- Verify that cl.exe is available ---
 where cl.exe >nul 2>&1
 if errorlevel 1 (
     echo cl.exe not found in PATH. Ensure that the VS environment was set up correctly.
@@ -53,7 +51,7 @@ for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
     set "ABSEIL_LIBS=!ABSEIL_LIBS! %%~nxf"
 )
 echo Abseil libraries found: !ABSEIL_LIBS!
-REM Save the discovered libraries into a temporary variable before ending the local block.
+REM Save discovered libraries before ending delayed expansion.
 set "TEMP_ABSEIL_LIBS=!ABSEIL_LIBS!"
 endlocal
 set "ABSEIL_LIBS=%TEMP_ABSEIL_LIBS%"
