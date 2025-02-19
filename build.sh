@@ -101,42 +101,36 @@ pack_nuget() {
   echo "=== Packing NuGet Package ==="
   mkdir -p bin/artifacts
 
-  # Try to update the GitVersion.Tool (which also works when it’s already installed)
-  output=$(dotnet tool update -g GitVersion.Tool 2>&1) || true
-  echo "$output"
-  # If the output mentions "already installed", that's OK.
-  if echo "$output" | grep -qi "already installed"; then
-    echo "GitVersion.Tool is already installed."
+  # Check if GitVersion is available; if not, install it.
+  if ! command -v gitversion &> /dev/null; then
+    echo "GitVersion not found. Installing GitVersion.Tool as a global tool..."
+    dotnet tool install -g GitVersion.Tool || echo "GitVersion.Tool may already be installed."
   fi
 
-  # Ensure the global dotnet tools directory is in the PATH.
+  # Ensure the dotnet tools folder is on PATH.
   export PATH="$HOME/.dotnet/tools:$PATH"
 
-  # Confirm that gitversion is now available.
+  # Double-check that gitversion is now available.
   if ! command -v gitversion &> /dev/null; then
-    echo "GitVersion still not found. Trying to install..."
-    dotnet tool install -g GitVersion.Tool
-    if [ $? -ne 0 ]; then
-      echo "Failed to install GitVersion.Tool" >&2
-      exit 1
-    fi
+    echo "Error: gitversion tool still not found in PATH after installation." >&2
+    exit 1
   fi
 
-  # Run GitVersion (as a global tool, it should now be available)
+  # Run GitVersion to get version info in JSON format.
   versionInfo=$(gitversion /output json)
   
-  # Check for jq.
+  # Ensure jq is installed.
   if ! command -v jq &> /dev/null; then
     echo "Error: jq is required to parse GitVersion output." >&2
     exit 1
   fi
-  
+
   version=$(echo "$versionInfo" | jq -r '.NuGetVersionV2')
   if [[ -z "$version" ]]; then
     echo "Could not determine version from gitversion output." >&2
     exit 1
   fi
-  
+
   echo "Packaging version: $version"
   dotnet pack BatteryPackage.csproj -c Release -o bin/artifacts/ /p:PackageVersion=${version}
   check_exit $?

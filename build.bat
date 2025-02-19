@@ -17,11 +17,23 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM --- Verify that cl.exe is now available ---
+where cl.exe >nul 2>&1
+if errorlevel 1 (
+    echo cl.exe not found in PATH. Ensure that the VS environment was set up correctly.
+    echo Current PATH: %PATH%
+    exit /b 1
+) else (
+    echo cl.exe found. Current PATH:
+    echo %PATH%
+)
+
 REM --- Build RE2 using CMake ---
 echo Building RE2...
 if not exist "bin\re2" mkdir bin\re2
 cmake -S thirdparty\re2 -B bin\re2 -G "Visual Studio 17 2022" -A x64 -D BUILD_TESTING=OFF -D BUILD_SHARED_LIBS=OFF -D RE2_BUILD_TESTING=OFF -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
 if errorlevel 1 exit /b 1
+
 cmake --build bin\re2 --config Release
 if errorlevel 1 exit /b 1
 
@@ -34,7 +46,6 @@ set "OUTFILE=bin\contents\runtimes\%RID%\native\cre2.%DYLIB_EXT%"
 if not exist "bin\contents\runtimes\%RID%\native" mkdir "bin\contents\runtimes\%RID%\native"
 
 REM --- Dynamically discover Abseil libraries from vcpkg ---
-REM Define ABSEIL_LIB_DIR outside the loop so it persists.
 set "ABSEIL_LIB_DIR=C:\vcpkg\installed\x64-windows\lib"
 set "ABSEIL_LIBS="
 for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
@@ -42,11 +53,8 @@ for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
     set "ABSEIL_LIBS=!ABSEIL_LIBS! %%~nxf"
 )
 echo Abseil libraries found: !ABSEIL_LIBS!
-REM End local environment and reassign variables so they're available outside.
-endlocal & (
-    set "ABSEIL_LIBS=%ABSEIL_LIBS%"
-    set "ABSEIL_LIB_DIR=C:\vcpkg\installed\x64-windows\lib"
-)
+rem End delayed expansion and set the variable for later use.
+endlocal & set "ABSEIL_LIBS=%ABSEIL_LIBS%"
 
 REM --- Invoke the compiler/linker ---
 cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
