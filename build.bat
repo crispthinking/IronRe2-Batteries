@@ -32,6 +32,18 @@ set "DYLIB_EXT=dll"
 set "OUTFILE=bin\contents\runtimes\%RID%\native\cre2.%DYLIB_EXT%"
 if not exist "bin\contents\runtimes\%RID%\native" mkdir "bin\contents\runtimes\%RID%\native"
 
+rem Begin dynamic discovery of Abseil libraries.
+setlocal EnableDelayedExpansion
+set "ABSEIL_LIB_DIR=C:\vcpkg\installed\x64-windows\lib"
+set "ABSEIL_LIBS="
+for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
+  rem Append the file name (with extension) to ABSEIL_LIBS.
+  set "ABSEIL_LIBS=!ABSEIL_LIBS! %%~nxf"
+)
+echo Abseil libraries found: !ABSEIL_LIBS!
+endlocal & set "ABSEIL_LIBS=%ABSEIL_LIBS%"
+
+rem Now run the linker command using the discovered libraries.
 cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Dcre2_VERSION_INTERFACE_CURRENT=0 ^
   /Dcre2_VERSION_INTERFACE_REVISION=0 ^
@@ -42,7 +54,7 @@ cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /I"C:\vcpkg\installed\x64-windows\include" ^
   thirdparty\cre2\src\cre2.cpp ^
   /link /machine:x64 bin\re2\Release\re2.lib ^
-  /LIBPATH:"C:\vcpkg\installed\x64-windows\lib" absl_base.lib absl_raw_logging_internal.lib absl_str_format_internal.lib ^
+  /LIBPATH:"C:\vcpkg\installed\x64-windows\lib" %ABSEIL_LIBS% ^
   /out:bin\contents\runtimes\win-x64\native\cre2.dll
 if errorlevel 1 exit /b 1
 

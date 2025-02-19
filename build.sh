@@ -63,7 +63,14 @@ build_cre2() {
     ABSEIL_LIB="-L/usr/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
   elif [[ "$OS" == "Darwin" ]]; then
     ABSEIL_INCLUDE="-I/opt/homebrew/Cellar/abseil/20240722.1/include"
-    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_log_internal -labsl_raw_logging_internal -labsl_str_format_internal -labsl_synchronization -labsl_time -labsl_strings -labsl_base -labsl_flags -labsl_flags_parse"
+    # Dynamically build the linker flags for all Abseil libraries found in /opt/homebrew/lib.
+    ABSEIL_LIB_FLAGS=""
+    for lib in /opt/homebrew/lib/libabsl_*.dylib; do
+      libname=$(basename "$lib" .dylib)
+      # Remove the "lib" prefix to form the -l flag value.
+      libname=${libname#lib}
+      ABSEIL_LIB_FLAGS="$ABSEIL_LIB_FLAGS -l$libname"
+    done
   fi
 
   pushd thirdparty/cre2 > /dev/null
@@ -89,13 +96,12 @@ pack_nuget() {
   echo "=== Packing NuGet Package ==="
   mkdir -p bin/artifacts
 
-  # Ensure GitVersion.Tool is installed/updated.
-  # This command will update the tool if it's already installed,
-  # and install it if it's not.
+  # Ensure GitVersion.Tool is updated/installed.
   dotnet tool update -g GitVersion.Tool || dotnet tool install -g GitVersion.Tool || true
   export PATH="$HOME/.dotnet/tools:$PATH"
 
-  versionInfo=$(gitversion /output json)
+  # Use dotnet tool run to invoke gitversion.
+  versionInfo=$(dotnet tool run gitversion /output json)
   # Requires 'jq' to parse JSON
   if ! command -v jq &> /dev/null; then
     echo "Error: jq is required to parse GitVersion output." >&2
@@ -107,7 +113,7 @@ pack_nuget() {
     exit 1
   fi
 
-  # Use dotnet pack on your package project file, passing the version
+  # Use dotnet pack on your package project file, passing the version.
   dotnet pack BatteryPackage.csproj -c Release -o bin/artifacts/ /p:PackageVersion=${version}
   check_exit $?
 }
