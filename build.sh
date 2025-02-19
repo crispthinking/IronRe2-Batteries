@@ -101,23 +101,21 @@ pack_nuget() {
   echo "=== Packing NuGet Package ==="
   mkdir -p bin/artifacts
 
-  # If gitversion is not found, attempt to install it.
-  if ! command -v gitversion &> /dev/null; then
-    echo "GitVersion not found. Installing GitVersion.Tool as a global tool..."
-    dotnet tool install -g GitVersion.Tool || echo "GitVersion.Tool may already be installed."
-  fi
-
-  # Explicitly add the dotnet tools folder to PATH
-  export PATH="$HOME/.dotnet/tools:$PATH"
-
-  # Instead of relying on command -v, use the full path to gitversion.
-  if [ -x "$HOME/.dotnet/tools/gitversion" ]; then
-    versionInfo=$("$HOME/.dotnet/tools/gitversion" /output json)
+  # Ensure a local dotnet tool manifest exists.
+  if [ ! -f "./.config/dotnet-tools.json" ]; then
+    echo "No tool manifest found. Creating one..."
+    dotnet new tool-manifest
+    echo "Installing GitVersion.CommandLine as a local tool..."
+    dotnet tool install GitVersion.CommandLine --version 4.0.0
   else
-    echo "Error: gitversion tool still not found in $HOME/.dotnet/tools." >&2
-    exit 1
+    echo "Tool manifest found. Restoring tools..."
+    dotnet tool restore
   fi
 
+  # Run GitVersion using the local tool (via dotnet).
+  echo "Running GitVersion..."
+  versionInfo=$(dotnet gitversion /output json)
+  
   # Ensure jq is available.
   if ! command -v jq &> /dev/null; then
     echo "Error: jq is required to parse GitVersion output." >&2
