@@ -1,4 +1,6 @@
 @echo off
+setlocal EnableDelayedExpansion
+
 REM --- Locate VsDevCmd.bat ---
 if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" (
     set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
@@ -31,18 +33,18 @@ set "DYLIB_EXT=dll"
 set "OUTFILE=bin\contents\runtimes\%RID%\native\cre2.%DYLIB_EXT%"
 if not exist "bin\contents\runtimes\%RID%\native" mkdir "bin\contents\runtimes\%RID%\native"
 
-rem Begin dynamic discovery of Abseil libraries.
-setlocal EnableDelayedExpansion
+REM --- Dynamically discover Abseil libraries from vcpkg ---
 set "ABSEIL_LIB_DIR=C:\vcpkg\installed\x64-windows\lib"
 set "ABSEIL_LIBS="
 for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
-  rem Append the file name (with extension) to ABSEIL_LIBS.
-  set "ABSEIL_LIBS=!ABSEIL_LIBS! %%~nxf"
+    rem Append the full filename (with extension) to ABSEIL_LIBS.
+    set "ABSEIL_LIBS=!ABSEIL_LIBS! %%~nxf"
 )
 echo Abseil libraries found: !ABSEIL_LIBS!
+rem End delayed expansion and set the variable for later use.
 endlocal & set "ABSEIL_LIBS=%ABSEIL_LIBS%"
 
-rem Now run the link command.
+REM --- Invoke the compiler/linker ---
 cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Dcre2_VERSION_INTERFACE_CURRENT=0 ^
   /Dcre2_VERSION_INTERFACE_REVISION=0 ^
@@ -53,7 +55,7 @@ cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /I"C:\vcpkg\installed\x64-windows\include" ^
   thirdparty\cre2\src\cre2.cpp ^
   /link /machine:x64 bin\re2\Release\re2.lib ^
-  /LIBPATH:"C:\vcpkg\installed\x64-windows\lib" %ABSEIL_LIBS% ^
+  /LIBPATH:"%ABSEIL_LIB_DIR%" %ABSEIL_LIBS% ^
   /out:bin\contents\runtimes\win-x64\native\cre2.dll
 if errorlevel 1 exit /b 1
 

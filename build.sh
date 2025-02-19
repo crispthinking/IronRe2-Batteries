@@ -60,7 +60,7 @@ build_cre2() {
   ABSEIL_LIB=""
   ABSEIL_INCLUDE=""
 
-  # Set Abseil include path (adjust as needed).
+  # Set Abseil include path and libraries based on OS.
   if [[ "$OS" == "Linux" ]]; then
     ABSEIL_INCLUDE="-I/usr/include/absl"
     ABSEIL_LIB="-L/usr/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
@@ -70,7 +70,10 @@ build_cre2() {
     ABSEIL_LIB_DIR="/opt/homebrew/lib"
     ABSEIL_LIBS=""
     for lib in "$ABSEIL_LIB_DIR"/libabsl_*.dylib; do
+      # Get the base filename without extension.
       libname=$(basename "$lib" .dylib)
+      # Remove the leading 'lib' so that -l flag is correct.
+      libname=${libname#lib}
       ABSEIL_LIBS="$ABSEIL_LIBS -l$libname"
     done
     ABSEIL_LIB="-L$ABSEIL_LIB_DIR $ABSEIL_LIBS"
@@ -98,14 +101,21 @@ pack_nuget() {
   echo "=== Packing NuGet Package ==="
   mkdir -p bin/artifacts
 
-  # Ensure GitVersion.Tool is updated/installed.
-  dotnet tool update -g GitVersion.Tool || dotnet tool install -g GitVersion.Tool || true
-  export PATH="$HOME/.dotnet/tools:$PATH"
+  # Install or update GitVersion.Tool into a known directory
+  TOOL_PATH="$HOME/.dotnet/tools"
+  dotnet tool install -g GitVersion.Tool --tool-path "$TOOL_PATH" || dotnet tool update -g GitVersion.Tool --tool-path "$TOOL_PATH"
 
-  # Run GitVersion directly by full path
-  versionInfo=$("$HOME/.dotnet/tools/gitversion" /output json)
+  # Add the tool path to PATH
+  export PATH="$TOOL_PATH:$PATH"
+
+  # (Optional) Debug: list the gitversion tool to verify installation.
+  echo "Listing GitVersion tool:"
+  ls -l "$TOOL_PATH/gitversion" || { echo "GitVersion executable not found in $TOOL_PATH"; exit 1; }
+
+  # Run GitVersion using its full path.
+  versionInfo=$("$TOOL_PATH/gitversion" /output json)
   
-  # Requires 'jq' to parse JSON
+  # Ensure 'jq' is installed for JSON parsing.
   if ! command -v jq &> /dev/null; then
     echo "Error: jq is required to parse GitVersion output." >&2
     exit 1
@@ -116,7 +126,7 @@ pack_nuget() {
     exit 1
   fi
 
-  # Use dotnet pack on your package project file, passing the version.
+  # Use dotnet pack with the version.
   dotnet pack BatteryPackage.csproj -c Release -o bin/artifacts/ /p:PackageVersion=${version}
   check_exit $?
 }
