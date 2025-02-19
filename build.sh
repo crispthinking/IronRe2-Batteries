@@ -63,8 +63,7 @@ build_cre2() {
     ABSEIL_LIB="-L/usr/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
   elif [[ "$OS" == "Darwin" ]]; then
     ABSEIL_INCLUDE="-I/opt/homebrew/Cellar/abseil/20240722.1/include"
-    # Add more Abseil libraries to resolve missing symbols on arm64.
-    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal -labsl_synchronization -labsl_time -labsl_strings"
+    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal -labsl_synchronization -labsl_time -labsl_strings -labsl_log_internal"
   fi
 
   pushd thirdparty/cre2 > /dev/null
