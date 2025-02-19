@@ -1,4 +1,6 @@
 #!/bin/bash
+
+
 set -euo pipefail
 
 OS="$(uname)"
@@ -9,6 +11,7 @@ if [[ "$OS" == "Darwin" ]]; then
 elif [[ "$OS" == "Linux" ]]; then
   export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}"
   export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/include"
+  export PATH="$HOME/.dotnet/tools:$PATH"
 fi
 
 if [[ "$OS" == "Linux" ]]; then
@@ -49,7 +52,6 @@ build_re2() {
 # --- Build cre2 (the C FFI interface) ---
 build_cre2() {
   echo "=== Building cre2 ==="
-  # Use an absolute path for the output file
   OUTFILE="$PWD/bin/contents/runtimes/${RID}/native/${DYLIB_PREFIX}cre2.${DYLIB_EXT}"
   echo "Output file will be: ${OUTFILE}"
   mkdir -p "$(dirname "$OUTFILE")"
@@ -61,7 +63,8 @@ build_cre2() {
     ABSEIL_LIB="-L/usr/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
   elif [[ "$OS" == "Darwin" ]]; then
     ABSEIL_INCLUDE="-I/opt/homebrew/Cellar/abseil/20240722.1/include"
-    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
+    # Added absl_synchronization to fix missing spinlock and related symbols on arm64.
+    ABSEIL_LIB="-L/opt/homebrew/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal -labsl_synchronization"
   fi
 
   pushd thirdparty/cre2 > /dev/null
