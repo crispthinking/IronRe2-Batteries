@@ -38,11 +38,10 @@ jobs:
           cmake -DCMAKE_INSTALL_PREFIX=/usr ..
           make -j$(nproc)
           sudo make install      
-          
-      - name: Install GitVersion Tool
-        run: |
-          dotnet tool install GitVersion.Tool --tool-path "$HOME/.dotnet/tools"
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      # Replace the global GitVersion installation with a local tool restore.
+      - name: Restore dotnet tools
+        run: dotnet tool restore
 
       - name: Add .dotnet Tools to PATH
         run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
@@ -68,8 +67,11 @@ jobs:
       - name: Install Dependencies via Homebrew
         run: |
           brew update
-          brew install gitversion jq nuget
+          brew install jq nuget
           brew install abseil googletest google-benchmark
+
+      - name: Restore dotnet tools
+        run: dotnet tool restore
 
       - name: Run Build Script
         run: ./build.sh
