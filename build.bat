@@ -1,4 +1,5 @@
 REM --- Locate VsDevCmd.bat ---
+echo Locating VsDevCmd.bat...
 if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" (
     set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
 ) else (
@@ -8,16 +9,20 @@ if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools
 echo Found VsDevCmd.bat at "%VSDIR%"
 
 REM --- Set up the Visual Studio environment for x64 ---
-call "%VSDIR%" -arch=x64
+echo Setting up Visual Studio environment...
+call "%VSDIR%" -arch:x64
 if errorlevel 1 (
     echo Failed to initialize VS environment.
     exit /b 1
 )
+echo Visual Studio environment set up successfully.
 
 REM --- Now enable delayed expansion for subsequent operations ---
+echo Enabling delayed expansion...
 setlocal EnableDelayedExpansion
 
 REM --- Verify that cl.exe is available ---
+echo Verifying cl.exe availability...
 where cl.exe >nul 2>&1
 if errorlevel 1 (
     echo cl.exe not found in PATH. Ensure that the VS environment was set up correctly.
@@ -46,6 +51,7 @@ set "OUTFILE=bin\contents\runtimes\%RID%\native\cre2.%DYLIB_EXT%"
 if not exist "bin\contents\runtimes\%RID%\native" mkdir "bin\contents\runtimes\%RID%\native"
 
 REM --- Dynamically discover Abseil libraries from vcpkg ---
+echo Discovering Abseil libraries from vcpkg...
 set "ABSEIL_LIB_DIR=C:\vcpkg\installed\x64-windows\lib"
 set "ABSEIL_LIBS="
 for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
@@ -59,6 +65,7 @@ endlocal
 set "ABSEIL_LIBS=%TEMP_ABSEIL_LIBS%"
 
 REM --- Invoke the compiler/linker ---
+echo Invoking the compiler/linker...
 cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Dcre2_VERSION_INTERFACE_CURRENT=0 ^
   /Dcre2_VERSION_INTERFACE_REVISION=0 ^

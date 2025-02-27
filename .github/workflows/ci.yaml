@@ -41,7 +41,7 @@ jobs:
 
       - name: Install GitVersion Tool
         run: |
-          dotnet tool install GitVersion.Tool --tool-path "$HOME/.dotnet/tools"
+          dotnet tool install GitVersion.Tool --tool-path "$HOME/.dotnet/tools" --version 6.1.0
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
       - name: Add .dotnet Tools to PATH
         run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
@@ -69,6 +69,13 @@ jobs:
           brew update
           brew install gitversion jq nuget
           brew install abseil googletest google-benchmark
+
+      - name: Install GitVersion Tool
+        run: |
+          dotnet tool install GitVersion.Tool --tool-path "$HOME/.dotnet/tools" --version 6.1.0
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+      - name: Add .dotnet Tools to PATH
+        run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
 
       - name: Run Build Script
         run: ./build.sh

@@ -3,9 +3,9 @@
   "isRoot": true,
   "tools": {
     "gitversion.tool": {
-      "version": "5.10.3",
+      "version": "6.1.0",
       "commands": [
-        "gitversion"
+        "dotnet-gitversion"
       ]
     }
   }
