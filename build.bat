@@ -73,7 +73,7 @@ if errorlevel 1 exit /b 1
 
 REM --- Package with dotnet pack ---
 echo Packaging NuGet package...
-gitversion /output json > gitversion.json
+dotnet-gitversion /output json > gitversion.json
 for /f "usebackq delims=" %%i in (`jq -r ".NuGetVersionV2" gitversion.json`) do set "VERSION=%%i"
 if "%VERSION%"=="" (
     echo Failed to retrieve version from GitVersion.
