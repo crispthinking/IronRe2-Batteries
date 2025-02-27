@@ -113,7 +113,7 @@ pack_nuget() {
 
   # Run GitVersion using the local tool (via dotnet).
   echo "Running GitVersion..."
-  versionInfo=$(dotnet gitversion /output json)
+  versionInfo=$(dotnet-gitversion /output json)
   
   # Ensure jq is available.
   if ! command -v jq &> /dev/null; then
