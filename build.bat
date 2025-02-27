@@ -10,7 +10,7 @@ echo Found VsDevCmd.bat at "%VSDIR%"
 
 REM --- Set up the Visual Studio environment ---
 echo Setting up Visual Studio environment...
-call "%VSDIR%" -arch=x64
+call "%VSDIR%" -arch=x64 -host_arch=x64
 if errorlevel 1 (
     echo Failed to initialize VS environment.
     exit /b 1
