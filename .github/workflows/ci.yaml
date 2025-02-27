@@ -25,7 +25,6 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-          
 
       - name: Install Dependencies
         run: |
@@ -38,8 +37,8 @@ jobs:
           mkdir build && cd build
           cmake -DCMAKE_INSTALL_PREFIX=/usr ..
           make -j$(nproc)
-          sudo make install      
-          
+          sudo make install
+
       - name: Install GitVersion Tool
         run: |
           dotnet tool install GitVersion.Tool --tool-path "$HOME/.dotnet/tools"
