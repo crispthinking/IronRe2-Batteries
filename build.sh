@@ -97,7 +97,7 @@ build_cre2() {
 }
 
 pack_nuget() {
-  echo "=== Packing NuGet Package ==="
+  echo "=== Get Version Number ==="
   mkdir -p bin/artifacts
 
   # Ensure a local dotnet tool manifest exists.
@@ -119,14 +119,15 @@ pack_nuget() {
 
   # Retrieve version information using GitVersion.
   echo "Retrieving version from GitVersion..."
-  # Filter the output so that only the JSON part (starting with '{') is processed.
-  json_output=$(dotnet gitversion /output json 2>&1 | sed -n '/^{/,$p')
+  json_output=$(dotnet-gitversion /output json 2>&1 || true)
+  json_output=$(echo "$json_output" | sed -n '/^{/,$p')
   version=$(echo "$json_output" | jq -r '.SemVer')
-  
+
   if [ -z "$version" ]; then
     echo "Error: Failed to retrieve version from GitVersion."
     exit 1
   fi
+
   echo "Version determined: $version"
 
   echo "=== Packing NuGet Package ==="
