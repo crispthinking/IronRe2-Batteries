@@ -1,3 +1,5 @@
+setlocal EnableDelayedExpansion
+
 REM --- Locate VsDevCmd.bat ---
 set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
 if not exist "%VSDIR%" (
@@ -15,20 +17,16 @@ if errorlevel 1 (
 )
 echo Visual Studio environment set up successfully.
 
-REM --- Debugging: Print PATH variable ---
-echo Debugging: Printing PATH variable...
-echo %PATH%
-
 REM --- Verify that cl.exe is available ---
 echo Verifying cl.exe availability...
 where cl.exe >nul 2>&1
 if errorlevel 1 (
     echo cl.exe not found in PATH. Ensure that the VS environment was set up correctly.
-    echo Current PATH: %PATH%
+    echo Current PATH: !PATH!
     exit /b 1
 ) else (
     echo cl.exe found. Current PATH:
-    echo %PATH%
+    echo !PATH!
 )
 
 REM --- Build RE2 using CMake ---
