@@ -6,9 +6,9 @@ if not exist "%VSDIR%" (
 )
 echo Found VsDevCmd.bat at "%VSDIR%"
 
-REM --- Set up the Visual Studio environment for x64 ---
+REM --- Set up the Visual Studio environment ---
 echo Setting up Visual Studio environment...
-call "%VSDIR%" -arch:x64
+call "%VSDIR%"
 if errorlevel 1 (
     echo Failed to initialize VS environment.
     exit /b 1
