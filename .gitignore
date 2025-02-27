@@ -211,3 +211,8 @@ tools/**
 CoverageResults/
 Artifacts/
 DeployArtifacts/
+.DS_Store
+.idea/projectSettingsUpdater.xml
+.idea/workspace.xml
+.idea/shelf/Uncommitted_changes_before_Checkout_at_14_02_2025,_16_28_\[Changes]/shelved.patch
+thirdparty/.DS_Store
