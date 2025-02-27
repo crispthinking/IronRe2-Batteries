@@ -120,7 +120,9 @@ pack_nuget() {
   # Retrieve version information using GitVersion.
   echo "Retrieving version from GitVersion..."
   json_output=$(dotnet-gitversion /output json 2>&1 || true)
+  echo "GitVersion output: $json_output"  # Debugging line
   json_output=$(echo "$json_output" | sed -n '/^{/,$p')
+  echo "Filtered JSON output: $json_output"  # Debugging line
   version=$(echo "$json_output" | jq -r '.SemVer')
 
   if [ -z "$version" ]; then

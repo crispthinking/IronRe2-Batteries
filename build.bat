@@ -55,10 +55,12 @@ for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
     set "ABSEIL_LIBS=!ABSEIL_LIBS! %%~nxf"
 )
 echo Abseil libraries found: !ABSEIL_LIBS!
-REM Save discovered libraries before ending delayed expansion.
+REM Save discovered libraries and VSDIR before ending delayed expansion.
 set "TEMP_ABSEIL_LIBS=!ABSEIL_LIBS!"
+set "TEMP_VSDIR=%VSDIR%"
 endlocal
 set "ABSEIL_LIBS=%TEMP_ABSEIL_LIBS%"
+set "VSDIR=%TEMP_VSDIR%"
 
 REM --- Invoke the compiler/linker ---
 echo Invoking the compiler/linker...
