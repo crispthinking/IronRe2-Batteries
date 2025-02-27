@@ -16,76 +16,91 @@ permissions:
   checks: write
 
 jobs:
-  build:
-    # Run the job on each OS in the matrix
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-
+  Linux:
+    name: Linux Build
+    runs-on: ubuntu-latest
     steps:
-      # Check out the repository with submodules
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           submodules: true
-          fetch-depth: 0   # fetch full history for GitVersion
+          fetch-depth: 0
+          
 
-      # Set up the .NET SDK (if cre2 has .NET projects to build/package)
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'  # Adjust to the required .NET version
-
-      # Install platform-specific build dependencies
-      - name: Install dependencies (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential clang cmake jq \
-              libabsl-dev libgtest-dev libbenchmark-dev \
-            || { echo "Apt package installation failed"; exit 1; }
-
-      - name: Install dependencies (macOS)
-        if: matrix.os == 'macos-latest'
+          sudo apt-get install -y clang cmake jq libabsl-dev libgtest-dev libbenchmark-dev
+      - name: Build and Install Abseil from Source
         run: |
-          brew update && brew upgrade
-          brew install cmake gitversion jq nuget \
-            || { echo "Failed to install essential tools via Homebrew"; exit 1; }
-          brew install abseil googletest google-benchmark \
-            || { echo "Failed to install C++ libraries via Homebrew"; exit 1; }
-
-      - name: Install dependencies (Windows)
-        if: matrix.os == 'windows-latest'
-        run: choco install cmake -y
-        shell: powershell
-
-      # Install GitVersion tool (using GitTools action for automatic versioning)
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0.9.14
-        with:
-          versionSpec: '5.x'  # Install GitVersion CLI version 5.x
-
-      - name: Determine version
-        id: gitversion
-        uses: gittools/actions/gitversion/execute@v0.9.14
-        with:
-          useConfigFile: false  # Use default GitVersion settings (main branch mode)
-
-      # Run the build script for the appropriate OS
-      - name: Build (Linux/macOS)
-        if: runner.os != 'Windows'
+          git clone https://github.com/abseil/abseil-cpp.git
+          cd abseil-cpp
+          mkdir build && cd build
+          cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+          make -j$(nproc)
+          sudo make install      
+          
+      - name: Install GitVersion Tool
         run: |
-          chmod +x build.sh
-          ./build.sh
+          dotnet tool install GitVersion.Tool --tool-path "$HOME/.dotnet/tools"
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+      - name: Add .dotnet Tools to PATH
+        run: echo "${HOME}/.dotnet/tools" >> $GITHUB_PATH
 
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
-        run: .\build.bat
-        shell: cmd
+      - name: Run Build Script
+        run: ./build.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: artifacts
-          path: bin\artifacts\
+          path: bin/artifacts/
+
+  macOS:
+    name: macOS Build
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install Dependencies via Homebrew
+        run: |
+          brew update
+          brew install gitversion jq nuget
+          brew install abseil googletest google-benchmark
+
+      - name: Run Build Script
+        run: ./build.sh
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: bin/artifacts/
+
+  Windows:
+    name: Windows Build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install Dependencies via Chocolatey
+        shell: powershell
+        run: |
+          choco install gitversion.portable -y
+          choco install jq -y
+          vcpkg install abseil
+      - name: Run Build Script
+        shell: cmd
+        run: build.bat
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: bin/artifacts/
