@@ -58,7 +58,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          name: artifacts-linux
           path: bin/artifacts/
 
   macOS:
@@ -90,7 +90,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          name: artifacts-macos
           path: bin/artifacts/
 
   Windows:
@@ -116,5 +116,5 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: artifacts
+          name: artifacts-windows
           path: bin/artifacts/
