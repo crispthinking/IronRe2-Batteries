@@ -108,10 +108,14 @@ if [ -f "$MODULES_PACKAGES_CONFIG" ]; then
 fi
 
 # Make sure that Cake has been installed.
-if [ ! -f "$CAKE_EXE" ]; then
-    echo "Could not find Cake.exe at '$CAKE_EXE'."
-    exit 1
+if ! dotnet tool list -g | grep -q 'cake.tool'; then
+    echo "Installing Cake.Tool..."
+    dotnet tool install -g Cake.Tool
+    if [ $? -ne 0 ]; then
+        echo "Could not install Cake.Tool."
+        exit 1
+    fi
 fi
 
 # Start Cake
-exec dotnet "$CAKE_EXE" $SCRIPT "${CAKE_ARGUMENTS[@]}"
+exec dotnet cake $SCRIPT "${CAKE_ARGUMENTS[@]}"
