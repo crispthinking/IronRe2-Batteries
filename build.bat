@@ -1,8 +1,6 @@
 REM --- Locate VsDevCmd.bat ---
-echo Locating VsDevCmd.bat...
-if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" (
-    set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
-) else (
+set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
+if not exist "%VSDIR%" (
     echo VsDevCmd.bat not found.
     exit /b 1
 )
