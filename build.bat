@@ -61,11 +61,12 @@ echo Abseil libraries found: !ABSEIL_LIBS!
 
 REM --- Preserve needed variables before ending delayed expansion ---
 set "TEMP_ABSEIL_LIBS=!ABSEIL_LIBS!"
+set "TEMP_ABSEIL_LIB_DIR=%ABSEIL_LIB_DIR%"
 set "TEMP_VSDIR=%VSDIR%"
-REM Now exit setlocal while restoring the VS-modified PATH along with our variables.
 (
   endlocal & (
     set "ABSEIL_LIBS=%TEMP_ABSEIL_LIBS%"
+    set "ABSEIL_LIB_DIR=%TEMP_ABSEIL_LIB_DIR%"
     set "VSDIR=%TEMP_VSDIR%"
     set "PATH=%VS_ENV%"
   )
