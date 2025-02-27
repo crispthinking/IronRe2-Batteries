@@ -2,7 +2,17 @@ name: Build RE2/cre2
 
 # Trigger on pushes and pull requests to the main branch.
 on:
-	@@ -16,89 +16,64 @@ permissions:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Set permissions for the workflow.
+permissions:
+  contents: write
+  pull-requests: write
   checks: write
 
 jobs:
