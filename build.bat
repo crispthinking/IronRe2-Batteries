@@ -15,9 +15,9 @@ if errorlevel 1 (
 )
 echo Visual Studio environment set up successfully.
 
-REM --- Now enable delayed expansion for subsequent operations ---
-echo Enabling delayed expansion...
-setlocal EnableDelayedExpansion
+REM --- Debugging: Print PATH variable ---
+echo Debugging: Printing PATH variable...
+echo %PATH%
 
 REM --- Verify that cl.exe is available ---
 echo Verifying cl.exe availability...
