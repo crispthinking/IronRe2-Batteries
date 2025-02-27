@@ -80,12 +80,11 @@ if errorlevel 1 exit /b 1
 
 REM --- Package with dotnet pack ---
 echo Packaging NuGet package...
-dotnet-gitversion /output json > gitversion.json
-for /f "usebackq delims=" %%i in (`jq -r ".NuGetVersionV2" gitversion.json`) do set "VERSION=%%i"
-if "%VERSION%"=="" (
-    echo Failed to retrieve version from GitVersion.
-    exit /b 1
-)
+
+REM Capture the version from gitversion (FullSemVer in this example)
+FOR /F "tokens=*" %%i in ('dotnet-gitversion /showvariable FullSemVer') do set VERSION=%%i
+
+echo Packaging version: %VERSION%
 dotnet pack BatteryPackage.csproj -c Release -o bin\artifacts /p:PackageVersion=%VERSION%
 if errorlevel 1 exit /b 1
 

@@ -7,5 +7,6 @@
         <PackageDescription>Platform-specific NuGet package containing RE2 and the cre2 wrapper</PackageDescription>
         <PackageTags>Regex;Re2</PackageTags>
         <Copyright>Crisp Thinking Group Ltd. 2019</Copyright>
+        <PackageVersion>$(PackageVersion)</PackageVersion>
     </PropertyGroup>
 </Project>
