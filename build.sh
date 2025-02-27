@@ -119,7 +119,10 @@ pack_nuget() {
 
   # Retrieve version information using GitVersion.
   echo "Retrieving version from GitVersion..."
-  version=$(dotnet gitversion /output json | jq -r '.SemVer')
+  # Filter the output so that only the JSON part (starting with '{') is processed.
+  json_output=$(dotnet gitversion /output json 2>&1 | sed -n '/^{/,$p')
+  version=$(echo "$json_output" | jq -r '.SemVer')
+  
   if [ -z "$version" ]; then
     echo "Error: Failed to retrieve version from GitVersion."
     exit 1
