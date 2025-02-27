@@ -104,8 +104,8 @@ pack_nuget() {
   if [ ! -f "./.config/dotnet-tools.json" ]; then
     echo "No tool manifest found. Creating one..."
     dotnet new tool-manifest
-    echo "Installing GitVersion.CommandLine as a local tool..."
-    dotnet tool install GitVersion.CommandLine --version 4.0.0
+    echo "Installing GitVersion.Tool as a local tool..."
+    dotnet tool install GitVersion.Tool --version 6.1.0
   else
     echo "Tool manifest found. Restoring tools..."
     dotnet tool restore
