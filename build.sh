@@ -111,24 +111,26 @@ pack_nuget() {
     dotnet tool restore
   fi
 
-  # Run GitVersion using the local tool (via dotnet).
-  echo "Running GitVersion..."
-  versionInfo=$(dotnet-gitversion /output json)
-  
-  # Ensure jq is available.
+  # Check if jq is installed for parsing JSON output.
   if ! command -v jq &> /dev/null; then
-    echo "Error: jq is required to parse GitVersion output." >&2
+    echo "Error: 'jq' is required but not installed. Please install jq and try again."
     exit 1
   fi
 
-  version=$(echo "$versionInfo" | jq -r '.NuGetVersionV2')
-  if [[ -z "$version" ]]; then
-    echo "Could not determine version from gitversion output." >&2
+  # Retrieve version information using GitVersion.
+  echo "Retrieving version from GitVersion..."
+  version=$(dotnet gitversion /output json | jq -r '.SemVer')
+  if [ -z "$version" ]; then
+    echo "Error: Failed to retrieve version from GitVersion."
     exit 1
   fi
+  echo "Version determined: $version"
+
+  echo "=== Packing NuGet Package ==="
+  mkdir -p bin/artifacts
 
   echo "Packaging version: $version"
-  dotnet pack BatteryPackage.csproj -c Release -o bin/artifacts/ /p:PackageVersion=${version}
+  dotnet pack BatteryPackage.csproj -c Release -o bin/artifacts/ -p:PackageVersion="$version"
   check_exit $?
 }
 
