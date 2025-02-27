@@ -1,11 +1,13 @@
-@echo off
-REM --- Set up Visual Studio environment for x64 (without delayed expansion) ---
-set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
-if not exist "%VSDIR%" (
+REM --- Locate VsDevCmd.bat ---
+if exist "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat" (
+    set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
+) else (
     echo VsDevCmd.bat not found.
     exit /b 1
 )
 echo Found VsDevCmd.bat at "%VSDIR%"
+
+REM --- Set up the Visual Studio environment for x64 ---
 call "%VSDIR%" -arch=x64
 if errorlevel 1 (
     echo Failed to initialize VS environment.
