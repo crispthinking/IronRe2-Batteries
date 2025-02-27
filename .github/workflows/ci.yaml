@@ -45,17 +45,6 @@ jobs:
           sudo apt-get install -y build-essential clang cmake jq \
               libabsl-dev libgtest-dev libbenchmark-dev \
             || { echo "Apt package installation failed"; exit 1; }
-      - name: Build GoogleTest
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          cd /usr/src/googletest/googletest
-          sudo cmake -B build -S . 
-          sudo cmake --build build \
-            || { echo "Failed to build GoogleTest"; exit 1; }
-          # Install GoogleTest libraries to a standard location
-          sudo cp build/libgtest*.a /usr/lib/ 
-
-
 
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos-latest'
