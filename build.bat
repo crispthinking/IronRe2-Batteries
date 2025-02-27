@@ -29,6 +29,9 @@ if errorlevel 1 (
     echo !PATH!
 )
 
+REM Capture the current VS-modified PATH.
+set "VS_ENV=!PATH!"
+
 REM --- Build RE2 using CMake ---
 echo Building RE2...
 if not exist "bin\re2" mkdir bin\re2
@@ -55,12 +58,18 @@ for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
     set "ABSEIL_LIBS=!ABSEIL_LIBS! %%~nxf"
 )
 echo Abseil libraries found: !ABSEIL_LIBS!
-REM Save discovered libraries and VSDIR before ending delayed expansion.
+
+REM --- Preserve needed variables before ending delayed expansion ---
 set "TEMP_ABSEIL_LIBS=!ABSEIL_LIBS!"
 set "TEMP_VSDIR=%VSDIR%"
-endlocal
-set "ABSEIL_LIBS=%TEMP_ABSEIL_LIBS%"
-set "VSDIR=%TEMP_VSDIR%"
+REM Now exit setlocal while restoring the VS-modified PATH along with our variables.
+(
+  endlocal & (
+    set "ABSEIL_LIBS=%TEMP_ABSEIL_LIBS%"
+    set "VSDIR=%TEMP_VSDIR%"
+    set "PATH=%VS_ENV%"
+  )
+)
 
 REM --- Invoke the compiler/linker ---
 echo Invoking the compiler/linker...
@@ -82,7 +91,7 @@ if errorlevel 1 exit /b 1
 REM --- Package with dotnet pack ---
 echo Packaging NuGet package...
 
-REM Capture the version from gitversion (FullSemVer in this example)
+REM Capture the version from GitVersion (FullSemVer in this example)
 FOR /F "tokens=*" %%i in ('dotnet-gitversion /showvariable FullSemVer') do set VERSION=%%i
 
 echo Packaging version: %VERSION%
