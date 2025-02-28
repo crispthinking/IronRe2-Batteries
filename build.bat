@@ -1,12 +1,12 @@
 setlocal EnableDelayedExpansion
 
-REM --- Set up the Visual Studio environment ---
-call "%VSDIR%" -arch=x64 -host_arch=x64
-if errorlevel 1 (
-    echo Failed to initialize VS environment.
+REM --- Locate VsDevCmd.bat ---
+set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
+if not exist "%VSDIR%" (
+    echo VsDevCmd.bat not found.
     exit /b 1
 )
-echo Visual Studio environment set up successfully.
+echo Found VsDevCmd.bat at "%VSDIR%"
 
 REM --- Set up the Visual Studio environment ---
 echo Setting up Visual Studio environment...
@@ -29,23 +29,8 @@ if errorlevel 1 (
     echo !PATH!
 )
 
-REM Capture the current VS-modified PATH and INCLUDE.
+REM Capture the current VS-modified PATH.
 set "VS_ENV=!PATH!"
-set "VS_INCLUDE=!INCLUDE!"
-
-REM Preserve needed variables before ending delayed expansion
-set "TEMP_ABSEIL_LIBS=!ABSEIL_LIBS!"
-set "TEMP_ABSEIL_LIB_DIR=%ABSEIL_LIB_DIR%"
-set "TEMP_VSDIR=%VSDIR%"
-(
-  endlocal & (
-    set "INCLUDE=%VS_INCLUDE%"
-    set "ABSEIL_LIBS=%TEMP_ABSEIL_LIBS%"
-    set "ABSEIL_LIB_DIR=%TEMP_ABSEIL_LIB_DIR%"
-    set "VSDIR=%TEMP_VSDIR%"
-    set "PATH=%VS_ENV%"
-  )
-)
 
 REM --- Build RE2 using CMake ---
 echo Building RE2...
@@ -87,8 +72,6 @@ set "TEMP_VSDIR=%VSDIR%"
   )
 )
 
-echo Include:  %INCLUDE%
-
 REM --- Invoke the compiler/linker ---
 echo Invoking the compiler/linker...
 cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
@@ -98,9 +81,8 @@ cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Dcre2_VERSION_INTERFACE_STRING="\"0.0.0\"" ^
   /Dcre2_decl=__declspec(dllexport) ^
   /Ithirdparty\re2\ ^
-  /I"C:\vcpkg\installed\x64-windows\include" ^
   thirdparty\cre2\src\cre2.cpp ^
-  /link /machine:x64 bin\re2\Release\re2.lib ^
+  /link bin\re2\Release\re2.lib ^
   /LIBPATH:"%ABSEIL_LIB_DIR%" %ABSEIL_LIBS% ^
   /out:bin\contents\runtimes\win-x64\native\cre2.dll
 if errorlevel 1 exit /b 1
