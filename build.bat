@@ -1,5 +1,3 @@
-setlocal EnableDelayedExpansion
-
 REM --- Locate VsDevCmd.bat ---
 set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
 if not exist "%VSDIR%" (
@@ -52,25 +50,12 @@ if not exist "bin\contents\runtimes\%RID%\native" mkdir "bin\contents\runtimes\%
 REM --- Dynamically discover Abseil libraries from vcpkg ---
 echo Discovering Abseil libraries from vcpkg...
 set "ABSEIL_LIB_DIR=C:\vcpkg\installed\x64-windows\lib"
-set "ABSEIL_LIBS="
+set "ABSEIL_LINKS="
 for %%f in ("%ABSEIL_LIB_DIR%\absl*.lib") do (
-    rem Append the file name (with extension) to ABSEIL_LIBS.
-    set "ABSEIL_LIBS=%ABSEIL_LIBS% %%~nxf"
+    rem Append the file name (with extension) to ABSEIL_LINKS.
+    set "ABSEIL_LINKS=%ABSEIL_LINKS% /link %%f"
 )
-echo Abseil libraries found: %ABSEIL_LIBS%
-
-REM --- Preserve needed variables before ending delayed expansion ---
-set "TEMP_ABSEIL_LIBS=!ABSEIL_LIBS!"
-set "TEMP_ABSEIL_LIB_DIR=%ABSEIL_LIB_DIR%"
-set "TEMP_VSDIR=%VSDIR%"
-(
-  endlocal & (
-    set "ABSEIL_LIBS=%TEMP_ABSEIL_LIBS%"
-    set "ABSEIL_LIB_DIR=%TEMP_ABSEIL_LIB_DIR%"
-    set "VSDIR=%TEMP_VSDIR%"
-    set "PATH=%VS_ENV%"
-  )
-)
+echo Abseil libraries found: %ABSEIL_LINKS%
 
 REM --- Invoke the compiler/linker ---
 echo Invoking the compiler/linker...
@@ -83,8 +68,8 @@ cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Ithirdparty\re2\ ^
   thirdparty\cre2\src\cre2.cpp ^
   /Fobin ^
+  %ABSEIL_LINKS% ^
   /link bin\re2\Release\re2.lib ^
-  /LIBPATH:"%ABSEIL_LIB_DIR%" %ABSEIL_LIBS% ^
   /out:bin\contents\runtimes\win-x64\native\cre2.dll
 if errorlevel 1 exit /b 1
 
