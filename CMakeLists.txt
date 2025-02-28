@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(cre2)
 
-# Abseil requires C++14
+# Abseil requires C++17
 set(CMAKE_CXX_STANDARD 17)
 
 add_library(cre2 SHARED "${CMAKE_SOURCE_DIR}/thirdparty/cre2/src/cre2.cpp")
