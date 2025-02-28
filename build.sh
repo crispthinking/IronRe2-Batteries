@@ -41,7 +41,7 @@ check_exit() {
 # --- Make ---
 build_cre2() {
   echo "=== Build Make ==="
-  cmake . --build bin/cre2 --config Release
+  cmake . -B bin/cre2
   check_exit $?
 
   pushd bin/cre2 > /dev/null
@@ -74,7 +74,7 @@ pack_nuget() {
 
   # Retrieve version information using GitVersion.
   echo "Retrieving version from GitVersion..."
-  json_output=$(dotnet-gitversion /output json 2>&1 || true)
+  json_output=$(dotnet tool run dotnet-gitversion /output json 2>&1 || true)
   echo "GitVersion output: $json_output"  # Debugging line
   json_output=$(echo "$json_output" | sed -n '/^{/,$p')
   echo "Filtered JSON output: $json_output"  # Debugging line
