@@ -66,9 +66,8 @@ for %%f in ("%VPCKG_DIR%\*") do (
     echo %%f
 )
 
-REM --- Build cre2 using CMake ---
 echo Building cre2 with CMake...
-cmake . -B bin/cre2
+cmake . -B bin/cre2 -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
 if errorlevel 1 exit /b 1
 
 cmake --build bin/cre2 --config Release
