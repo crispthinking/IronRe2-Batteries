@@ -82,6 +82,7 @@ cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Dcre2_decl=__declspec(dllexport) ^
   /Ithirdparty\re2\ ^
   /I"C:\vcpkg\installed\x64-windows\include" ^
+  /I"%VSDIR%\..\..\..\VC\Tools\MSVC\14.29.30133\include" ^
   thirdparty\cre2\src\cre2.cpp ^
   /link /machine:x64 bin\re2\Release\re2.lib ^
   /LIBPATH:"%ABSEIL_LIB_DIR%" %ABSEIL_LIBS% ^
