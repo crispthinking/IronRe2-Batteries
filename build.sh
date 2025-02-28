@@ -9,7 +9,7 @@ if [[ "$OS" == "Darwin" ]]; then
   export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/opt/homebrew/include"
 elif [[ "$OS" == "Linux" ]]; then
   export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}"
-  export CXXFLAGS="-std=c++17 -fPIC -O3 -g
+  export CXXFLAGS="-std=c++17 -fPIC -O3 -g"
 fi
 
 if [[ "$OS" == "Linux" ]]; then
