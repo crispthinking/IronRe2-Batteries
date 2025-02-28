@@ -49,7 +49,7 @@ REM --- Dynamically discover Abseil libraries from vcpkg ---
 echo Discovering Abseil libraries from vcpkg...
 set "ABSEIL_LIB_DIR=C:\vcpkg\installed\x64-windows\lib"
 set "ABSEIL_LIBS="
-for %%f in ("%ABSEIL_LIB_DIR%\absl_*.lib") do (
+for %%f in ("%ABSEIL_LIB_DIR%\absl*.lib") do (
     rem Append the file name (with extension) to ABSEIL_LIBS.
     set "ABSEIL_LIBS=%ABSEIL_LIBS% %%~nxf"
 )
