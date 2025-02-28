@@ -33,7 +33,7 @@ set "VS_ENV=!PATH!"
 REM --- Build RE2 using CMake ---
 echo Building RE2...
 if not exist "bin\re2" mkdir bin\re2
-cmake -S thirdparty\re2 -B bin\re2 -G "Visual Studio 17 2022" -A x64 -D BUILD_TESTING=OFF -D BUILD_SHARED_LIBS=OFF -D RE2_BUILD_TESTING=OFF -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
+
 if errorlevel 1 exit /b 1
 
 cmake --build bin\re2 --config Release
@@ -57,21 +57,20 @@ for %%f in ("%ABSEIL_LIB_DIR%\absl*.lib") do (
 )
 echo Abseil libraries found: %ABSEIL_LINKS%
 
-REM --- Invoke the compiler/linker ---
-echo Invoking the compiler/linker...
-cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
-  /Dcre2_VERSION_INTERFACE_CURRENT=0 ^
-  /Dcre2_VERSION_INTERFACE_REVISION=0 ^
-  /Dcre2_VERSION_INTERFACE_AGE=0 ^
-  /Dcre2_VERSION_INTERFACE_STRING="\"0.0.0\"" ^
-  /Dcre2_decl=__declspec(dllexport) ^
-  /Ithirdparty\re2\ ^
-  /I"C:\vcpkg\installed\x64-windows\include" ^
-  thirdparty\cre2\src\cre2.cpp ^
-  /Fobin ^
-  %ABSEIL_LINKS% ^
-  /link bin\re2\Release\re2.lib ^
-  /out:bin\contents\runtimes\win-x64\native\cre2.dll
+dir "C:\vcpkg\installed"
+
+set "VPCKG_DIR=C:\vcpkg\"
+echo Listing all files in %VPCKG_DIR%:
+for %%f in ("%VPCKG_DIR%\*") do (
+    echo %%f
+)
+
+REM --- Build cre2 using CMake ---
+echo Building cre2 with CMake...
+cmake . -B bin/cre2
+if errorlevel 1 exit /b 1
+
+cmake --build bin/cre2 --config Release
 if errorlevel 1 exit /b 1
 
 REM --- Package with dotnet pack ---
