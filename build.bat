@@ -74,7 +74,6 @@ set "TEMP_VSDIR=%VSDIR%"
 
 REM --- Invoke the compiler/linker ---
 echo Invoking the compiler/linker...
-call "%VSDIR%"
 cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Dcre2_VERSION_INTERFACE_CURRENT=0 ^
   /Dcre2_VERSION_INTERFACE_REVISION=0 ^
