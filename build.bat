@@ -29,8 +29,23 @@ if errorlevel 1 (
     echo !PATH!
 )
 
-REM Capture the current VS-modified PATH.
+REM Capture the current VS-modified PATH and INCLUDE.
 set "VS_ENV=!PATH!"
+set "VS_INCLUDE=!INCLUDE!"
+
+REM Preserve needed variables before ending delayed expansion
+set "TEMP_ABSEIL_LIBS=!ABSEIL_LIBS!"
+set "TEMP_ABSEIL_LIB_DIR=%ABSEIL_LIB_DIR%"
+set "TEMP_VSDIR=%VSDIR%"
+(
+  endlocal & (
+    set "INCLUDE=%VS_INCLUDE%"
+    set "ABSEIL_LIBS=%TEMP_ABSEIL_LIBS%"
+    set "ABSEIL_LIB_DIR=%TEMP_ABSEIL_LIB_DIR%"
+    set "VSDIR=%TEMP_VSDIR%"
+    set "PATH=%VS_ENV%"
+  )
+)
 
 REM --- Build RE2 using CMake ---
 echo Building RE2...
