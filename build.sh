@@ -8,7 +8,7 @@ if [[ "$OS" == "Darwin" ]]; then
   export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/opt/homebrew/lib/pkgconfig"
   export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/opt/homebrew/include"
 elif [[ "$OS" == "Linux" ]]; then
-  export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}"
+  #export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}"
   export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/include"
   export PATH="$HOME/.dotnet/tools:$PATH"
 fi
