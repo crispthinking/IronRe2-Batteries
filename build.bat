@@ -82,6 +82,7 @@ cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Dcre2_decl=__declspec(dllexport) ^
   /Ithirdparty\re2\ ^
   thirdparty\cre2\src\cre2.cpp ^
+  /Fobin ^
   /link bin\re2\Release\re2.lib ^
   /LIBPATH:"%ABSEIL_LIB_DIR%" %ABSEIL_LIBS% ^
   /out:bin\contents\runtimes\win-x64\native\cre2.dll
