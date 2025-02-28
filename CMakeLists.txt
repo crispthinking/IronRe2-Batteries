@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.16)
-
 project(cre2)
 
 # Abseil requires C++14
@@ -16,6 +15,9 @@ target_compile_definitions(cre2 PRIVATE
     cre2_decl=__declspec(dllexport)
 )
 
+# Add the re2 include directory so that 're2/re2.h' can be found.
+target_include_directories(cre2 PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/re2")
+
 # Import Abseil's CMake targets
 find_package(absl REQUIRED)
 add_library(re2 STATIC IMPORTED)
@@ -23,5 +25,3 @@ set_target_properties(re2 PROPERTIES
     IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/bin/re2/Release/re2.lib"
 )
 target_link_libraries(cre2 PRIVATE re2)
-
-
