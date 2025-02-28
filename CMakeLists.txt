@@ -20,6 +20,6 @@ set(RE2_BUILD_TESTING OFF)
 add_subdirectory("${CMAKE_SOURCE_DIR}/thirdparty/re2" re2)
 
 # Import Abseil's CMake targets.
-find_package(absl REQUIRED)
+#find_package(absl REQUIRED)
 
 target_link_libraries(cre2 PRIVATE re2)
