@@ -1,3 +1,5 @@
+setlocal EnableDelayedExpansion
+
 REM --- Locate VsDevCmd.bat ---
 set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
 if not exist "%VSDIR%" (
@@ -6,7 +8,7 @@ if not exist "%VSDIR%" (
 )
 echo Found VsDevCmd.bat at "%VSDIR%"
 
-REM --- Set up the Visual Studio environment for x64 ---
+REM --- Set up the Visual Studio environment ---
 echo Setting up Visual Studio environment...
 call "%VSDIR%" -arch=x64 -host_arch=x64
 if errorlevel 1 (
@@ -27,6 +29,8 @@ if errorlevel 1 (
     echo !PATH!
 )
 
+REM Capture the current VS-modified PATH.
+set "VS_ENV=!PATH!"
 
 REM --- Build RE2 using CMake ---
 echo Building RE2...
@@ -55,6 +59,19 @@ for %%f in ("%ABSEIL_LIB_DIR%\absl*.lib") do (
 )
 echo Abseil libraries found: %ABSEIL_LIBS%
 
+REM --- Preserve needed variables before ending delayed expansion ---
+set "TEMP_ABSEIL_LIBS=!ABSEIL_LIBS!"
+set "TEMP_ABSEIL_LIB_DIR=%ABSEIL_LIB_DIR%"
+set "TEMP_VSDIR=%VSDIR%"
+(
+  endlocal & (
+    set "ABSEIL_LIBS=%TEMP_ABSEIL_LIBS%"
+    set "ABSEIL_LIB_DIR=%TEMP_ABSEIL_LIB_DIR%"
+    set "VSDIR=%TEMP_VSDIR%"
+    set "PATH=%VS_ENV%"
+  )
+)
+
 REM --- Invoke the compiler/linker ---
 echo Invoking the compiler/linker...
 cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
@@ -65,6 +82,7 @@ cl.exe /EHsc /std:c++17 /LD /MD /O2 /DNDEBUG ^
   /Dcre2_decl=__declspec(dllexport) ^
   /Ithirdparty\re2\ ^
   /I"C:\vcpkg\installed\x64-windows\include" ^
+  /I"%VSDIR%\..\..\..\VC\Tools\MSVC\14.29.30133\include" ^
   thirdparty\cre2\src\cre2.cpp ^
   /link /machine:x64 bin\re2\Release\re2.lib ^
   /LIBPATH:"%ABSEIL_LIB_DIR%" %ABSEIL_LIBS% ^
