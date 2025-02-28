@@ -1,12 +1,12 @@
 setlocal EnableDelayedExpansion
 
-REM --- Locate VsDevCmd.bat ---
-set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
-if not exist "%VSDIR%" (
-    echo VsDevCmd.bat not found.
+REM --- Set up the Visual Studio environment ---
+call "%VSDIR%" -arch=x64 -host_arch=x64
+if errorlevel 1 (
+    echo Failed to initialize VS environment.
     exit /b 1
 )
-echo Found VsDevCmd.bat at "%VSDIR%"
+echo Visual Studio environment set up successfully.
 
 REM --- Set up the Visual Studio environment ---
 echo Setting up Visual Studio environment...
