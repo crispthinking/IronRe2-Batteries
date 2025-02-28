@@ -90,8 +90,9 @@ pack_nuget() {
   echo "=== Packing NuGet Package ==="
   mkdir -p bin/artifacts
 
+  echo "BatteryPackage.${OS}.csproj"
   echo "Packaging version: $version"
-  dotnet pack BatteryPackage.csproj -c Release -o bin/artifacts/ -p:PackageVersion="$version"
+  dotnet pack BatteryPackage.${OS}.csproj -c Release -o bin/artifacts/ -p:PackageVersion="$version"
   check_exit $?
 }
 

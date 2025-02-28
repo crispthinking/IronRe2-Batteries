@@ -73,6 +73,8 @@ if errorlevel 1 exit /b 1
 cmake --build bin/cre2 --config Release
 if errorlevel 1 exit /b 1
 
+msbuild bin/cre2/cre2.sln /p:Configuration=Release
+
 REM --- Package with dotnet pack ---
 echo Packaging NuGet package...
 
@@ -80,7 +82,7 @@ REM Capture the version from GitVersion (FullSemVer in this example)
 FOR /F "tokens=*" %%i in ('dotnet-gitversion /showvariable FullSemVer') do set VERSION=%%i
 
 echo Packaging version: %VERSION%
-dotnet pack BatteryPackage.csproj -c Release -o bin\artifacts /p:PackageVersion=%VERSION%
+dotnet pack BatteryPackage.Windows.csproj -c Release -o bin\artifacts /p:PackageVersion=%VERSION%
 if errorlevel 1 exit /b 1
 
 exit /b 0
