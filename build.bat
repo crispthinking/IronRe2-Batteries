@@ -6,6 +6,9 @@ if not exist "%VSDIR%" (
 )
 echo Found VsDevCmd.bat at "%VSDIR%"
 
+echo "Tool manifest found. Restoring tools..."
+dotnet tool restore
+
 REM --- Set up the Visual Studio environment ---
 echo Setting up Visual Studio environment...
 call "%VSDIR%" -arch=x64 -host_arch=x64
