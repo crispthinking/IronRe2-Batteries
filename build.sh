@@ -38,60 +38,15 @@ check_exit() {
   fi
 }
 
-# --- Build RE2 ---
-build_re2() {
-  echo "=== Building RE2 ==="
-  pushd thirdparty/re2 > /dev/null
-  echo "Running: make obj/libre2.a -j$(( NUM_PROC * 2 ))"
-  make obj/libre2.a -j$(( NUM_PROC * 2 ))
-  check_exit $?
-  popd > /dev/null
-}
-
-# --- Build cre2 (the C FFI interface) ---
+# --- Make ---
 build_cre2() {
-  echo "=== Building cre2 ==="
-  OUTFILE="$PWD/bin/contents/runtimes/${RID}/native/${DYLIB_PREFIX}cre2.${DYLIB_EXT}"
-  echo "Output file will be: ${OUTFILE}"
-  mkdir -p "$(dirname "$OUTFILE")"
+  echo "=== Build Make ==="
+  cmake . --build bin/cre2 --config Release
+  check_exit $?
 
-  # Initialize variables.
-  ABSEIL_LIB=""
-  ABSEIL_INCLUDE=""
-
-  # Set Abseil include path and libraries based on OS.
-  if [[ "$OS" == "Linux" ]]; then
-    ABSEIL_INCLUDE="-I/usr/include/absl"
-    ABSEIL_LIB="-L/usr/lib -labsl_base -labsl_raw_logging_internal -labsl_str_format_internal"
-  elif [[ "$OS" == "Darwin" ]]; then
-    ABSEIL_INCLUDE="-I/opt/homebrew/Cellar/abseil/20240722.1/include"
-    # Dynamically collect all Abseil libraries from Homebrew's lib folder.
-    ABSEIL_LIB_DIR="/opt/homebrew/lib"
-    ABSEIL_LIBS=""
-    for lib in "$ABSEIL_LIB_DIR"/libabsl_*.dylib; do
-      # Get the base filename without extension.
-      libname=$(basename "$lib" .dylib)
-      # Remove the leading 'lib' so that -l flag is correct.
-      libname=${libname#lib}
-      ABSEIL_LIBS="$ABSEIL_LIBS -l$libname"
-    done
-    ABSEIL_LIB="-L$ABSEIL_LIB_DIR $ABSEIL_LIBS"
-  fi
-
-  pushd thirdparty/cre2 > /dev/null
-  echo "Building with clang++; output: ${OUTFILE}"
-  clang++ --verbose \
-    -shared -fpic -std=c++17 -O3 -g -DNDEBUG \
-    -Dcre2_VERSION_INTERFACE_CURRENT=0 \
-    -Dcre2_VERSION_INTERFACE_REVISION=0 \
-    -Dcre2_VERSION_INTERFACE_AGE=0 \
-    -Dcre2_VERSION_INTERFACE_STRING="\"0.0.0\"" \
-    -I../re2/ \
-    ${ABSEIL_INCLUDE} \
-    src/cre2.cpp \
-    ../re2/obj/libre2.a \
-    ${ABSEIL_LIB} \
-    -o "${OUTFILE}"
+  pushd bin/cre2 > /dev/null
+  echo "Running: make -j$(( NUM_PROC * 2 ))"
+  make -j$(( NUM_PROC * 2 ))
   check_exit $?
   popd > /dev/null
 }
@@ -158,7 +113,6 @@ main() {
       clean
       ;;
     *)
-      build_re2
       build_cre2
       pack_nuget
       ;;
