@@ -11,7 +11,6 @@ target_compile_definitions(cre2 PRIVATE
     cre2_VERSION_INTERFACE_REVISION=0
     cre2_VERSION_INTERFACE_AGE=0
     cre2_VERSION_INTERFACE_STRING="0.0.0"
-    cre2_decl=__declspec(dllexport)
 )
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/thirdparty/re2" re2)
