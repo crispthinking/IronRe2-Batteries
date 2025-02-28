@@ -8,11 +8,11 @@ add_library(cre2 SHARED "${CMAKE_SOURCE_DIR}/thirdparty/cre2/src/cre2.cpp")
 
 # Define compile definitions that were previously passed via cl.exe.
 target_compile_definitions(cre2 PRIVATE 
-    cre2_VERSION_INTERFACE_CURRENT=0
-    cre2_VERSION_INTERFACE_REVISION=0
-    cre2_VERSION_INTERFACE_AGE=0
-    cre2_VERSION_INTERFACE_STRING="\"0.0.0\""
-    cre2_decl=__declspec(dllexport)
+    CRE2_VERSION_INTERFACE_CURRENT=0
+    CRE2_VERSION_INTERFACE_REVISION=0
+    CRE2_VERSION_INTERFACE_AGE=0
+    CRE2_VERSION_INTERFACE_STRING="\"0.0.0\""
+    CRE2_DECL=__declspec(dllexport)
 )
 
 # Add include directories for re2 and Abseil.
