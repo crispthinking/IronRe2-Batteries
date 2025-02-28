@@ -13,13 +13,13 @@ target_compile_definitions(cre2 PRIVATE
     cre2_VERSION_INTERFACE_STRING="0.0.0"
 )
 
+# Import Abseil's CMake targets.
+find_package(absl CONFIG REQUIRED)
 set(BUILD_TESTING OFF)
 set(BUILD_SHARED_LIBS OFF)
 set(RE2_BUILD_TESTING OFF)
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/thirdparty/re2" re2)
 
-# Import Abseil's CMake targets.
-#find_package(absl REQUIRED)
 
 target_link_libraries(cre2 PRIVATE re2)
