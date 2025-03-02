@@ -40,7 +40,7 @@ check_exit() {
 # --- Make ---
 build_cre2() {
   echo "=== Build Make ==="
-  cmake . -B bin/cre2
+  cmake . -B bin/cre2 -DCMAKE_CXX_FLAGS="$CXXFLAGS"
   check_exit $?
 
   pushd bin/cre2 > /dev/null
