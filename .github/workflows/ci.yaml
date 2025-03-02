@@ -35,10 +35,22 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake jq libabsl-dev libgtest-dev libbenchmark-dev
+          sudo apt-get install -y clang cmake jq libgtest-dev libbenchmark-dev
+
+      # Build Abseil from source to ensure compatibility with RE2
+      - name: Build Abseil from source
+        run: |
+          git clone https://github.com/abseil/abseil-cpp.git
+          cd abseil-cpp
+          git checkout $(cat $GITHUB_WORKSPACE/thirdparty/re2/ABSEIL_REVISION)
+          mkdir build && cd build
+          cmake .. -DCMAKE_CXX_STANDARD=17 -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build . --parallel $(nproc) --target install
 
       - name: Run Build Script
         run: ./build.sh
+        env:
+          CMAKE_PREFIX_PATH: "/usr/local"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -56,14 +68,25 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - name: Install Dependencies via Homebrew
+      - name: Install General Dependencies
         run: |
           brew update
-          brew install gitversion jq nuget
-          brew install abseil googletest google-benchmark
+          brew install gitversion jq nuget googletest google-benchmark
+
+      # Build Abseil from source on macOS too
+      - name: Build Abseil from source
+        run: |
+          git clone https://github.com/abseil/abseil-cpp.git
+          cd abseil-cpp
+          git checkout $(cat $GITHUB_WORKSPACE/thirdparty/re2/ABSEIL_REVISION)
+          mkdir build && cd build
+          cmake .. -DCMAKE_CXX_STANDARD=17 -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr/local
+          cmake --build . --parallel $(sysctl -n hw.logicalcpu) --target install
 
       - name: Run Build Script
         run: ./build.sh
+        env:
+          CMAKE_PREFIX_PATH: "/usr/local"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -86,10 +109,26 @@ jobs:
         run: |
           choco install gitversion.portable -y
           choco install jq -y
-          vcpkg install abseil
+          choco install cmake ninja -y
+
+      # Build Abseil from source on Windows
+      - name: Build Abseil from source
+        shell: powershell
+        run: |
+          git clone https://github.com/abseil/abseil-cpp.git
+          cd abseil-cpp
+          $revision = Get-Content -Path "$env:GITHUB_WORKSPACE/thirdparty/re2/ABSEIL_REVISION"
+          git checkout $revision
+          mkdir build
+          cd build
+          cmake .. -G "Ninja" -DCMAKE_CXX_STANDARD=17 -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX="C:/abseil"
+          cmake --build . --parallel $env:NUMBER_OF_PROCESSORS --target install
+
       - name: Run Build Script
         shell: cmd
         run: build.bat
+        env:
+          CMAKE_PREFIX_PATH: "C:/abseil"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
