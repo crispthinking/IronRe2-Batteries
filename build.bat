@@ -82,7 +82,7 @@ REM --- Package with dotnet pack ---
 echo Packaging NuGet package...
 
 REM Capture the version from GitVersion (FullSemVer in this example)
-FOR /F "tokens=*" %%i in ('dotnet-gitversion /showvariable FullSemVer') do set VERSION=%%i
+FOR /F "tokens=*" %%i in ('dotnet tool run dotnet-gitversion /showvariable FullSemVer') do set VERSION=%%i
 
 echo Packaging version: %VERSION%
 dotnet pack BatteryPackage.Windows.csproj -c Release -o bin\artifacts /p:PackageVersion=%VERSION%
