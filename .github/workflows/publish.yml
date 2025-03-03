@@ -1,13 +1,21 @@
 name: publish
 
 on:
-  push:
-    branches:
-      - 'main'       # Run the workflow when pushing to the main branch  
-  release:
+  workflow_run:
+    # List the names of the workflow(s) after which you want to run
+    workflows: ["Build RE2/cre2"]
     types:
-      - published    # Run the workflow when a new GitHub release is published
-  workflow_dispatch:  # Allow manual triggering from the GitHub UI
+      - completed
+
+
+# on:
+#   push:
+#     branches:
+#       - 'main'       # Run the workflow when pushing to the main branch  
+#   release:
+#     types:
+#       - published    # Run the workflow when a new GitHub release is published
+#   workflow_dispatch:  # Allow manual triggering from the GitHub UI
 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
