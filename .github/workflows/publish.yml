@@ -14,7 +14,7 @@ permissions:
   contents: write
   pull-requests: write
   checks: write
-
+  packages: write
 
 # on:
 #   push:
@@ -154,7 +154,7 @@ jobs:
       # Use --skip-duplicate to prevent errors if a package with the same version already exists.
       # If you retry a failed workflow, already published packages will be skipped without error.
       - name: Publish GitHub package
-        run: |
+        run: |                                                      
           dotnet nuget push bin/artifacts/**/*.nupkg --api-key "${{ secrets.GITHUB_TOKEN }}" --source "https://nuget.pkg.github.com/crispthinking/index.json" --skip-duplicate
       
       - name: Publish NuGet package
