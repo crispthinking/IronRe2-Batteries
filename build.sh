@@ -52,8 +52,8 @@ build_cre2() {
   popd > /dev/null
   
   # Copy the built library to the artifacts directory
-  mkdir -p bin/artifacts/runtimes/$RID/native
-  cp bin/cre2/${DYLIB_PREFIX}cre2.${DYLIB_EXT} bin/artifacts/runtimes/$RID/native/
+  #mkdir -p bin/artifacts/runtimes/$RID/native
+  #cp bin/cre2/${DYLIB_PREFIX}cre2.${DYLIB_EXT} bin/artifacts/runtimes/$RID/native/
 }
 
 pack_nuget() {
