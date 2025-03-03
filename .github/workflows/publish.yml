@@ -2,10 +2,8 @@ name: publish
 
 on:
   workflow_run:
-    # List the names of the workflow(s) after which you want to run
     workflows: ["Build RE2/cre2"]
-    types:
-      - completed
+    types: [completed]
 
 
 # on:
