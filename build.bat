@@ -73,10 +73,7 @@ echo Building cre2 with CMake...
 cmake . -B bin/cre2 -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
 if errorlevel 1 exit /b 1
 
-cmake --build bin/cre2 --config Release
-if errorlevel 1 exit /b 1
-
-msbuild bin\cre2/cre2.sln /p:Configuration=Release
+cmake --build bin\cre2 --config Release
 if errorlevel 1 exit /b 1
 
 :: Copy the built DLL to the expected location for packaging
