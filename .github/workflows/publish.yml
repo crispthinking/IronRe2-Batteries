@@ -1,9 +1,19 @@
 name: publish
 
+# TEMPORARY: This is a temporary workaround to ensure that the build job runs first.
 on:
-  workflow_run:
-    workflows: ["Build RE2/cre2"]
-    types: [completed]
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# TEMPORARY: This is a temporary workaround to ensure that the build job runs first.
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
 
 
 # on:
@@ -18,50 +28,124 @@ on:
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
-  NuGetDirectory: ${{ github.workspace }}/nuget
 
 jobs:
-  build:
+  Linux:
+    name: Linux Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Get full history to allow automatic versioning
+          submodules: true
+          fetch-depth: 0
 
-      # Install the .NET SDK indicated in the global.json file
+      # Set up the .NET SDK 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '9.0.x'  
 
-      - name: Build
-        run: dotnet build -c Release
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake jq libgtest-dev libbenchmark-dev
 
-     # Create the NuGet package in the folder from the environment variable NuGetDirectory
-      - name: Pack
-        run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
+      # Build Abseil from source to ensure compatibility with RE2
+      - name: Build Abseil from source
+        run: |
+          git clone https://github.com/abseil/abseil-cpp.git
+          cd abseil-cpp
+          git checkout $(cat $GITHUB_WORKSPACE/thirdparty/re2/ABSEIL_REVISION)
+          mkdir build && cd build
+          cmake .. -DCMAKE_CXX_STANDARD=17 -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr/local
+          sudo cmake --build . --parallel $(nproc) --target install
 
-      # Publish the NuGet package as an artifact, so they can be used in the following jobs
-      - uses: actions/upload-artifact@v4
+      - name: Run Build Script
+        run: ./build.sh
+        env:
+          CMAKE_PREFIX_PATH: "/usr/local"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: nuget
-          if-no-files-found: error
-          retention-days: 7
-          path: ${{ env.NuGetDirectory }}/*.nupkg
+          name: artifacts-linux
+          path: bin/artifacts/
+          
+  macOS:
+    name: macOS Build
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Install Dependencies via Homebrew
+        run: |
+            brew update
+            brew install gitversion jq nuget
+            brew install abseil googletest google-benchmark
+  
+      - name: Run Build Script
+        run: ./build.sh
+  
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts-macos
+          path: bin/artifacts/
+  
+  Windows:
+      name: Windows Build
+      runs-on: windows-latest
+      steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+          with:
+            submodules: true
+            fetch-depth: 0
+  
+        - name: Install Dependencies via Chocolatey
+          shell: powershell
+          run: |
+            choco install gitversion.portable -y
+            choco install jq -y
+            vcpkg install abseil
+        - name: Run Build Script
+          shell: cmd
+          run: build.bat
+  
+        - name: Upload Artifacts
+          uses: actions/upload-artifact@v4
+          with:
+           name: artifacts-windows
+           path: bin/artifacts/
 
   deploy:
     # Publish only when creating a GitHub Release
     # https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository
     # You can update this logic if you want to manage releases differently
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+
     runs-on: ubuntu-latest
-    needs: [ build ]
+    needs: [ Windows, Linux, macOS ]
     steps:
       # Download the NuGet package created in the previous job
       - uses: actions/download-artifact@v4
         with:
-          name: nuget
-          path: ${{ env.NuGetDirectory }}
+          name: artifacts-linux
+          path: bin/artifacts/linux/
+    
+      - uses: actions/download-artifact@v4
+        with:
+          name: artifacts-macos
+          path: bin/artifacts/macos/
+      
+      - uses: actions/download-artifact@v4
+        with:
+          name: artifacts-windows
+          path: bin/artifacts/windows/
 
       # Install the .NET SDK indicated in the global.json file
       - name: Setup .NET Core
@@ -71,9 +155,8 @@ jobs:
       # If you retry a failed workflow, already published packages will be skipped without error.
       - name: Publish GitHub package
         run: |
-          dotnet nuget push ${NuGetDirectory}/*.nupkg --api-key "${{ secrets.GITHUB_TOKEN }}" --source "https://nuget.pkg.github.com/crispthinking/index.json" --skip-duplicate
-
-      # Publish to NuGet.org
+          dotnet nuget push bin/artifacts/**/*.nupkg --api-key "${{ secrets.GITHUB_TOKEN }}" --source "https://nuget.pkg.github.com/crispthinking/index.json" --skip-duplicate
+      
       - name: Publish NuGet package
         run: |
-          dotnet nuget push ${NuGetDirectory}/*.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+          dotnet nuget push bin/artifacts/**/*.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
