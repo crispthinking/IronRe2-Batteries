@@ -58,6 +58,36 @@ jobs:
           name: artifacts-linux
           path: bin/artifacts/
 
+#Temp code, to be moved to publish later
+      - name: Upload NuGet Artifact
+        uses: actions/upload-artifact@v4
+        with:
+            name: nuget-linux
+            if-no-files-found: error
+            retention-days: 7
+            path: ${{ env.NuGetDirectory }}/*.nupkg
+  
+      - name: Download NuGet Artifact
+        uses: actions/download-artifact@v4
+        with:
+            name: nuget-linux
+            path: ${{ env.NuGetDirectory }}
+  
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+            dotnet-version: '9.0.x'
+  
+        # Publish to GitHub Package Registry
+      - name: Publish to GitHub Package Registry
+        run: |
+            dotnet nuget push ${{ env.NuGetDirectory }}/*.nupkg --api-key "${{ secrets.GITHUB_TOKEN }}" --source "https://nuget.pkg.github.com/crispthinking/index.json" --skip-duplicate
+
+        # Publish to NuGet.org
+      - name: Publish to NuGet.org
+        run: |
+            dotnet nuget push ${{ env.NuGetDirectory }}/*.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate    
+
   macOS:
     name: macOS Build
     runs-on: macos-latest
