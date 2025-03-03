@@ -83,7 +83,7 @@ jobs:
           name: artifacts-macos
           path: bin/artifacts/
   
-    Windows:
+  Windows:
       name: Windows Build
       runs-on: windows-latest
       steps:
@@ -105,7 +105,6 @@ jobs:
   
         - name: Upload Artifacts
           uses: actions/upload-artifact@v4
-        uses: actions/upload-artifact@v4
-        with:
-          name: artifacts-windows
-          path: bin/artifacts/
+          with:
+           name: artifacts-windows
+           path: bin/artifacts/
