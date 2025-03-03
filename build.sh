@@ -81,20 +81,13 @@ pack_nuget() {
   echo "Retrieving version from GitVersion..."
   json_output=$(dotnet tool run dotnet-gitversion /output json 2>&1 || true)
   echo "GitVersion output: $json_output"  # Debugging line
-  
-  # Extract just the JSON part
   json_output=$(echo "$json_output" | sed -n '/^{/,$p')
   echo "Filtered JSON output: $json_output"  # Debugging line
-  
-  # Try to parse with jq, with error handling
-  if ! version=$(echo "$json_output" | jq -r '.SemVer' 2>/dev/null); then
-    echo "Failed to parse GitVersion output with jq. Using fallback version."
-    version="0.1.0"
-  fi
+  version=$(echo "$json_output" | jq -r '.SemVer')
 
-  if [ -z "$version" ] || [ "$version" = "null" ]; then
-    echo "Warning: Failed to retrieve version from GitVersion. Using fallback version."
-    version="0.1.0"
+  if [ -z "$version" ]; then
+    echo "Error: Failed to retrieve version from GitVersion."
+    exit 1
   fi
 
   echo "Version determined: $version"
@@ -108,17 +101,14 @@ pack_nuget() {
   check_exit $?
 }
 
+
 # --- Clean Build Artifacts ---
 clean() {
   echo "=== Cleaning Build Artifacts ==="
   rm -rf bin/
-  if [ -d "thirdparty/re2" ]; then
-    pushd thirdparty/re2 > /dev/null
-    if [ -f "Makefile" ]; then
-      make clean || true
-    fi
-    popd > /dev/null
-  fi
+  pushd thirdparty/re2 > /dev/null
+  make clean
+  popd > /dev/null
 }
 
 # --- Main ---
