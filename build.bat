@@ -1,5 +1,5 @@
 REM --- Locate VsDevCmd.bat ---
-set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat"
+set "VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"
 if not exist "%VSDIR%" (
     echo VsDevCmd.bat not found.
     exit /b 1
@@ -40,14 +40,16 @@ for %%f in ("%VPCKG_DIR%\*") do (
 )
 
 echo Building cre2 with CMake...
-cmake . -B bin/cre2 -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
+cmake . -B bin/cre2 -G "Visual Studio 17 2022" -A x64  -DCMAKE_TOOLCHAIN_FILE=C:/Users/Aorus/vcpkg/scripts/buildsystems/vcpkg.cmake
+REM cmake . -B bin/cre2 -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/Users/Aorus/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_GENERATOR_INSTANCE="C:/Program Files/Microsoft Visual Studio/2022/Community" --debug-find
+
 if errorlevel 1 exit /b 1
 
 
 :: Copy the built DLL to the expected location for packaging
-echo Copying cre2.dll from Release folder to expected location...
-copy /Y "bin\cre2\Release\cre2.dll" "bin\cre2\cre2.dll"
-if errorlevel 1 exit /b 1
+REM echo Copying cre2.dll from Release folder to expected location...
+REM copy /Y "bin\cre2\Release\cre2.dll" "bin\cre2\cre2.dll"
+REM if errorlevel 1 exit /b 1
 
 REM --- Package with dotnet pack ---
 echo Packaging NuGet package...
