@@ -18,50 +18,20 @@ if errorlevel 1 (
 )
 echo Visual Studio environment set up successfully.
 
-REM --- Verify that cl.exe is available ---
-echo Verifying cl.exe availability...
-where cl.exe >nul 2>&1
-if errorlevel 1 (
-    echo cl.exe not found in PATH. Ensure that the VS environment was set up correctly.
-    echo Current PATH: !PATH!
-    exit /b 1
-) else (
-    echo cl.exe found. Current PATH:
-    echo !PATH!
-)
-
 REM Capture the current VS-modified PATH.
 set "VS_ENV=!PATH!"
 
-REM --- Build RE2 using CMake ---
-echo Building RE2...
-if not exist "bin\re2" mkdir bin\re2
-cmake -S thirdparty\re2 -B bin\re2 -G "Visual Studio 17 2022" -A x64 -D BUILD_TESTING=OFF -D BUILD_SHARED_LIBS=OFF -D RE2_BUILD_TESTING=OFF -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
 
-if errorlevel 1 exit /b 1
-
-cmake --build bin\re2 --config Release
-if errorlevel 1 exit /b 1
 
 REM --- Build cre2 (the C FFI interface) ---
 echo Building cre2...
 set "RID=win-x64"
 set "DYLIB_PREFIX="
 set "DYLIB_EXT=dll"
-set "OUTFILE=bin\contents\runtimes\%RID%\native\cre2.%DYLIB_EXT%"
+set "OUTFILE=bin\contents\runtimes\win-x64\native\cre2.dll"
 if not exist "bin\contents\runtimes\%RID%\native" mkdir "bin\contents\runtimes\%RID%\native"
 
-REM --- Dynamically discover Abseil libraries from vcpkg ---
-echo Discovering Abseil libraries from vcpkg...
-set "ABSEIL_LIB_DIR=C:\vcpkg\installed\x64-windows\lib"
-set "ABSEIL_LINKS="
-for %%f in ("%ABSEIL_LIB_DIR%\absl*.lib") do (
-    rem Append the file name (with extension) to ABSEIL_LINKS.
-    set "ABSEIL_LINKS=%ABSEIL_LINKS% /link %%f"
-)
-echo Abseil libraries found: %ABSEIL_LINKS%
-
-dir "C:\vcpkg\installed"
+dir "C:\vcpkg\packages"
 
 set "VPCKG_DIR=C:\vcpkg\"
 echo Listing all files in %VPCKG_DIR%:
@@ -73,8 +43,6 @@ echo Building cre2 with CMake...
 cmake . -B bin/cre2 -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake
 if errorlevel 1 exit /b 1
 
-cmake --build bin\cre2 --config Release
-if errorlevel 1 exit /b 1
 
 :: Copy the built DLL to the expected location for packaging
 echo Copying cre2.dll from Release folder to expected location...
