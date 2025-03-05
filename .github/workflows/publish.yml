@@ -117,10 +117,10 @@ jobs:
           name: artifacts-macos
           path: bin/artifacts/macos/
       
-      - uses: actions/download-artifact@v4
-        with:
-          name: artifacts-windows
-          path: bin/artifacts/windows/
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: artifacts-windows
+      #     path: bin/artifacts/windows/
 
       # Install the .NET SDK indicated in the global.json file
       - name: Setup .NET Core
