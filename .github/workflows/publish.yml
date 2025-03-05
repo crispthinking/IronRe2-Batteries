@@ -97,31 +97,31 @@ jobs:
           name: artifacts-macos
           path: bin/artifacts/
   
-  Windows:
-      name: Windows Build
-      runs-on: windows-latest
-      steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
-          with:
-            submodules: true
-            fetch-depth: 0
+  # Windows:
+  #     name: Windows Build
+  #     runs-on: windows-latest
+  #     steps:
+  #       - name: Checkout Repository
+  #         uses: actions/checkout@v4
+  #         with:
+  #           submodules: true
+  #           fetch-depth: 0
   
-        - name: Install Dependencies via Chocolatey
-          shell: powershell
-          run: |
-            choco install gitversion.portable -y
-            choco install jq -y
-            vcpkg install abseil
-        - name: Run Build Script
-          shell: cmd
-          run: build.bat
+  #       - name: Install Dependencies via Chocolatey
+  #         shell: powershell
+  #         run: |
+  #           choco install gitversion.portable -y
+  #           choco install jq -y
+  #           vcpkg install abseil
+  #       - name: Run Build Script
+  #         shell: cmd
+  #         run: build.bat
   
-        - name: Upload Artifacts
-          uses: actions/upload-artifact@v4
-          with:
-           name: artifacts-windows
-           path: bin/artifacts/
+  #       - name: Upload Artifacts
+  #         uses: actions/upload-artifact@v4
+  #         with:
+  #          name: artifacts-windows
+  #          path: bin/artifacts/
 
   deploy:
     # Publish only when creating a GitHub Release
