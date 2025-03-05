@@ -45,9 +45,9 @@ if errorlevel 1 exit /b 1
 
 
 :: Copy the built DLL to the expected location for packaging
-REM echo Copying cre2.dll from Release folder to expected location...
-REM copy /Y "bin\cre2\Release\cre2.dll" "bin\cre2\cre2.dll"
-REM if errorlevel 1 exit /b 1
+ echo Copying cre2.dll from Release folder to expected location...
+ copy /Y "bin\cre2\Release\cre2.dll" "bin\cre2\cre2.dll"
+ if errorlevel 1 exit /b 1
 
 REM --- Package with dotnet pack ---
 echo Packaging NuGet package...
