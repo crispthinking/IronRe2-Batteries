@@ -5,10 +5,10 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<Content Include="bin\cre2\Release\cre2.dll">
-			<PackagePath>runtimes\win-x64\native\cre2.dll</PackagePath>
-			<Pack>true</Pack>
-		</Content>
+    <Content Include="bin\cre2\cre2.dll">
+      <PackagePath>runtimes\win-x64\native\cre2.dll</PackagePath>
+      <Pack>true</Pack>
+    </Content>
 	</ItemGroup>
 	
 </Project>
