@@ -1,110 +1,110 @@
-name: Build RE2/cre2
+# name: Build RE2/cre2
 
-# Trigger on pushes and pull requests to the main branch.
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+# # Trigger on pushes and pull requests to the main branch.
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - main
 
-# Set permissions for the workflow.
-permissions:
-  contents: write
-  pull-requests: write
-  checks: write
+# # Set permissions for the workflow.
+# permissions:
+#   contents: write
+#   pull-requests: write
+#   checks: write
 
-jobs:
-  Linux:
-    name: Linux Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-          fetch-depth: 0
+# jobs:
+#   Linux:
+#     name: Linux Build
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v4
+#         with:
+#           submodules: true
+#           fetch-depth: 0
 
-      # Set up the .NET SDK 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'  
+#       # Set up the .NET SDK 
+#       - name: Setup .NET
+#         uses: actions/setup-dotnet@v4
+#         with:
+#           dotnet-version: '9.0.x'  
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang cmake jq libgtest-dev libbenchmark-dev
+#       - name: Install Dependencies
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install -y clang cmake jq libgtest-dev libbenchmark-dev
 
-      # Build Abseil from source to ensure compatibility with RE2
-      - name: Build Abseil from source
-        run: |
-          git clone https://github.com/abseil/abseil-cpp.git
-          cd abseil-cpp
-          git checkout $(cat $GITHUB_WORKSPACE/thirdparty/re2/ABSEIL_REVISION)
-          mkdir build && cd build
-          cmake .. -DCMAKE_CXX_STANDARD=17 -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr/local
-          sudo cmake --build . --parallel $(nproc) --target install
+#       # Build Abseil from source to ensure compatibility with RE2
+#       - name: Build Abseil from source
+#         run: |
+#           git clone https://github.com/abseil/abseil-cpp.git
+#           cd abseil-cpp
+#           git checkout $(cat $GITHUB_WORKSPACE/thirdparty/re2/ABSEIL_REVISION)
+#           mkdir build && cd build
+#           cmake .. -DCMAKE_CXX_STANDARD=17 -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr/local
+#           sudo cmake --build . --parallel $(nproc) --target install
 
-      - name: Run Build Script
-        run: ./build.sh
-        env:
-          CMAKE_PREFIX_PATH: "/usr/local"
+#       - name: Run Build Script
+#         run: ./build.sh
+#         env:
+#           CMAKE_PREFIX_PATH: "/usr/local"
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: artifacts-linux
-          path: bin/artifacts/
+#       - name: Upload Artifacts
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: artifacts-linux
+#           path: bin/artifacts/
           
-  macOS:
-    name: macOS Build
-    runs-on: macos-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-          fetch-depth: 0
+#   macOS:
+#     name: macOS Build
+#     runs-on: macos-latest
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v4
+#         with:
+#           submodules: true
+#           fetch-depth: 0
 
-      - name: Install Dependencies via Homebrew
-        run: |
-            brew update
-            brew install gitversion jq nuget
-            brew install abseil googletest google-benchmark
+#       - name: Install Dependencies via Homebrew
+#         run: |
+#             brew update
+#             brew install gitversion jq nuget
+#             brew install abseil googletest google-benchmark
   
-      - name: Run Build Script
-        run: ./build.sh
+#       - name: Run Build Script
+#         run: ./build.sh
   
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: artifacts-macos
-          path: bin/artifacts/
+#       - name: Upload Artifacts
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: artifacts-macos
+#           path: bin/artifacts/
   
-  Windows:
-      name: Windows Build
-      runs-on: windows-latest
-      steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
-          with:
-            submodules: true
-            fetch-depth: 0
+#   Windows:
+#       name: Windows Build
+#       runs-on: windows-latest
+#       steps:
+#         - name: Checkout Repository
+#           uses: actions/checkout@v4
+#           with:
+#             submodules: true
+#             fetch-depth: 0
   
-        - name: Install Dependencies via Chocolatey
-          shell: powershell
-          run: |
-            choco install gitversion.portable -y
-            choco install jq -y
-            vcpkg install abseil
-        - name: Run Build Script
-          shell: cmd
-          run: build.bat
+#         - name: Install Dependencies via Chocolatey
+#           shell: powershell
+#           run: |
+#             choco install gitversion.portable -y
+#             choco install jq -y
+#             vcpkg install abseil
+#         - name: Run Build Script
+#           shell: cmd
+#           run: build.bat
   
-        - name: Upload Artifacts
-          uses: actions/upload-artifact@v4
-          with:
-           name: artifacts-windows
-           path: bin/artifacts/
+#         - name: Upload Artifacts
+#           uses: actions/upload-artifact@v4
+#           with:
+#            name: artifacts-windows
+#            path: bin/artifacts/
