@@ -46,8 +46,7 @@ REM Create the output directory if it doesn't exist
 if not exist "bin\cre2" mkdir "bin\cre2"
 
 echo Building cre2 with CMake...
-cmake . -B bin\cre2 -G "Visual Studio 17 2022" -A x64 ^
-  REM -DCMAKE_GENERATOR_INSTANCE="C:\Program Files\Microsoft Visual Studio\2022\Community" ^
+cmake -S windows -B bin\cre2 -G "Visual Studio 17 2022" -A x64 ^
   -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake ^
   -DCMAKE_BUILD_TYPE=Release ^
   -DCMAKE_CXX_FLAGS="%CXX_FLAGS%" ^
@@ -56,7 +55,7 @@ cmake . -B bin\cre2 -G "Visual Studio 17 2022" -A x64 ^
 if errorlevel 1 exit /b 1
 
 echo Building with parallel jobs: %PARALLEL_JOBS%
-cmake --build bin\cre2 --config Release --parallel %PARALLEL_JOBS% 
+cmake --build bin\cre2 --config Release --parallel %PARALLEL_JOBS%
 if errorlevel 1 exit /b 1
 
 echo Checking for built DLL...
