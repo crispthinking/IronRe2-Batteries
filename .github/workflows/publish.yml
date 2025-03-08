@@ -1,101 +1,53 @@
 name: publish
 
-# TEMPORARY: This is a temporary workaround to ensure that the build job runs first.
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - 'main'       # Run the workflow when pushing to the main branch  
+  release:
+    types:
+      - published    # Run the workflow when a new GitHub release is published
+  workflow_dispatch:  # Allow manual triggering from the GitHub UI
 
-# TEMPORARY: This is a temporary workaround to ensure that the build job runs first.
 permissions:
   contents: write
   pull-requests: write
   checks: write
   packages: write
 
-# on:
-#   push:
-#     branches:
-#       - 'main'       # Run the workflow when pushing to the main branch  
-#   release:
-#     types:
-#       - published    # Run the workflow when a new GitHub release is published
-#   workflow_dispatch:  # Allow manual triggering from the GitHub UI
-
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
+  NuGetDirectory: ${{ github.workspace }}/nuget
 
 jobs:
-  Linux:
-    name: Linux Build
-    runs-on: ubuntu-22.04
+  build:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          submodules: true
-          fetch-depth: 0
+          fetch-depth: 0  # Get full history to allow automatic versioning
 
-      # Set up the .NET SDK 
+      # Install the .NET SDK indicated in the global.json file
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'  
+          dotnet-version: '9.0.x'
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang cmake jq libgtest-dev libbenchmark-dev
+      - name: Build
+        run: dotnet build -c Release
 
-      # Build Abseil from source to ensure compatibility with RE2
-      - name: Build Abseil from source
-        run: |
-          git clone https://github.com/abseil/abseil-cpp.git
-          cd abseil-cpp
-          git checkout $(cat $GITHUB_WORKSPACE/thirdparty/re2/ABSEIL_REVISION)
-          mkdir build && cd build
-          cmake .. -DCMAKE_CXX_STANDARD=17 -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr/local
-          sudo cmake --build . --parallel $(nproc) --target install
+     # Create the NuGet package in the folder from the environment variable NuGetDirectory
+      - name: Pack
+        run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
 
-      - name: Run Build Script
-        run: ./build.sh
-        env:
-          CMAKE_PREFIX_PATH: "/usr/local"
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      # Publish the NuGet package as an artifact, so they can be used in the following jobs
+      - uses: actions/upload-artifact@v4
         with:
-          name: artifacts-linux
-          path: bin/artifacts/
-          
-  macOS:
-    name: macOS Build
-    runs-on: macos-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-          fetch-depth: 0
-
-      - name: Install Dependencies via Homebrew
-        run: |
-            brew update
-            brew install gitversion jq nuget
-            brew install abseil googletest google-benchmark
-  
-      - name: Run Build Script
-        run: ./build.sh
-  
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: artifacts-macos
-          path: bin/artifacts/
+          name: nuget
+          if-no-files-found: error
+          retention-days: 7
+          path: ${{ env.NuGetDirectory }}/*.nupkg
   
 
   deploy:
@@ -117,13 +69,13 @@ jobs:
           name: artifacts-macos
           path: bin/artifacts/macos/
       
-      # - uses: actions/download-artifact@v4
-      #   with:
-      #     name: artifacts-windows
-      #     path: bin/artifacts/windows/
+      - uses: actions/download-artifact@v4
+        with:
+          name: artifacts-windows
+          path: bin/artifacts/windows/
 
       # Install the .NET SDK indicated in the global.json file
-      - name: Setup .NET Core
+      - name: Setup .NET 
         uses: actions/setup-dotnet@v4
       # Publish all NuGet packages to NuGet.org
       # Use --skip-duplicate to prevent errors if a package with the same version already exists.
@@ -132,6 +84,6 @@ jobs:
         run: |                                                      
           dotnet nuget push bin/artifacts/**/*.nupkg --api-key "${{ secrets.GITHUB_TOKEN }}" --source "https://nuget.pkg.github.com/crispthinking/index.json" --skip-duplicate
       
-      # - name: Publish NuGet package
-      #   run: |
-      #     dotnet nuget push bin/artifacts/**/*.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+      - name: Publish NuGet package
+        run: |
+          dotnet nuget push bin/artifacts/**/*.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
