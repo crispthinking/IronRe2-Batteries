@@ -47,7 +47,7 @@ if not exist "bin\cre2" mkdir "bin\cre2"
 
 echo Building cre2 with CMake...
 cmake . -B bin\cre2 -G "Visual Studio 17 2022" -A x64 ^
-  -DCMAKE_GENERATOR_INSTANCE="C:\Program Files\Microsoft Visual Studio\2022\Community" ^
+  REM -DCMAKE_GENERATOR_INSTANCE="C:\Program Files\Microsoft Visual Studio\2022\Community" ^
   -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake ^
   -DCMAKE_BUILD_TYPE=Release ^
   -DCMAKE_CXX_FLAGS="%CXX_FLAGS%" ^
