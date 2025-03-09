@@ -35,7 +35,7 @@ target_include_directories(cre2 PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/re2")
   
 # Tell RE2 to use the system Abseil.
 # Make sure the path points to the static triplet libraries.
-# set(absl_DIR "C:/Users/Aorus/vcpkg/installed/x64-windows-static/share/absl")
+set(absl_DIR "C:/vcpkg/installed/x64-windows-static/share/absl")
 find_package(absl CONFIG REQUIRED)
 
 # Build RE2 as a subdirectory.

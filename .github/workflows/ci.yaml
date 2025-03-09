@@ -95,7 +95,7 @@ jobs:
         run: |
           choco install gitversion.portable -y
           choco install jq -y
-          vcpkg install abseil
+          vcpkg install abseil:x64-windows-static
 
       - name: Run Build Script (Windows)
         if: matrix.os == 'windows-latest'
