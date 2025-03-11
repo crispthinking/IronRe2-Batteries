@@ -39,7 +39,7 @@ jobs:
     # You can update this logic if you want to manage releases differently
   publish:
     #TEMP DISABLE if: github.event_name == 'release'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     steps:
       - name: Download Windows Package
@@ -67,5 +67,11 @@ jobs:
       # Publish all NuGet packages to NuGet.org
       # Use --skip-duplicate to prevent errors if a package with the same version already exists.
       # If you retry a failed workflow, already published packages will be skipped without error.
-      - name: Publish NuGet Packages to GitHub Packages
-        run: dotnet nuget push bin/artifacts/**/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
+      - name: Publish GitHub package
+        run: |
+          dotnet nuget push bin/artifacts/**/*.nupkg --api-key "${{ secrets.GITHUB_TOKEN }}" --source "https://nuget.pkg.github.com/crispthinking/index.json" --skip-duplicate
+      
+      # - name: Publish NuGet package
+      #   run: |
+      #     dotnet nuget push bin/artifacts/**/*.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+
