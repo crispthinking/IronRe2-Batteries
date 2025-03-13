@@ -1,19 +1,19 @@
 name: Build RE2/cre2
 
 on:
- push:
-   branches:
-     - main
- pull_request:
-   branches:
-     - main
- workflow_dispatch:
- workflow_call:  # Allows the workflow to be called by other workflows
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+  workflow_call:  # Allows the workflow to be called by other workflows
 
 permissions:
- contents: write
- pull-requests: write
- checks: write
+  contents: write
+  pull-requests: write
+  checks: write
 
 jobs:
   build:
@@ -43,13 +43,13 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-    
+
       - name: Add GitHub Packages NuGet Source
         run: dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/crispthinking/index.json"
-    
+
       - name: Restore dependencies
         run: dotnet restore IronRe2.sln
-    
+
       - name: Build
         run: dotnet build IronRe2.sln --configuration Release --no-restore
 
