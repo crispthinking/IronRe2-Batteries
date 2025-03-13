@@ -55,6 +55,14 @@ build_cre2() {
       echo "Invalid architecture for macOS build: $arch"
       exit 1
     fi
+
+    # For x64 (Intel) builds on macOS, override environment variables to use the x86_64 Homebrew paths
+    if [[ "$arch" == "x64" ]]; then
+      export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
+      export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/local/include"
+      export LDFLAGS="-L/usr/local/lib"
+    fi
+
     echo "=== Build Make for $arch (RID: $RID_ARCH) ==="
     mkdir -p bin/cre2/$arch
     cmake . -B bin/cre2/$arch \
@@ -81,8 +89,8 @@ build_cre2() {
       -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
       -DRID="$RID" \
       -DDYLIB_EXT="$DYLIB_EXT" \
-      -DDYLIB_PREFIX="$DYLIB_PREFIX"
-      -DCMAKE_OSX_ARCHITECTURES=$arch
+      -DDYLIB_PREFIX="$DYLIB_PREFIX" \
+      -DCMAKE_OSX_ARCHITECTURES="$arch"
     check_exit $?
 
     pushd bin/cre2 > /dev/null
