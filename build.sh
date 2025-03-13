@@ -41,7 +41,13 @@ build_cre2() {
   echo "=== Build Make ==="
   # Configure with CMake
   mkdir -p bin/cre2
-  cmake . -B bin/cre2 -DCMAKE_CXX_FLAGS="$CXXFLAGS" -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS"
+  cmake . -B bin/cre2 \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+    -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
+    -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
+    -DRID="$RID" \
+    -DDYLIB_EXT="$DYLIB_EXT" \
+    -DDYLIB_PREFIX="$DYLIB_PREFIX"
   check_exit $?
 
   # Build
