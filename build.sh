@@ -2,7 +2,6 @@
 set -euo pipefail
 
 OS="$(uname)"
-CRISP_GROUP="Crisp Thinking Group Ltd."
 
 # Global configuration for Linux.
 if [[ "$OS" == "Linux" ]]; then
@@ -16,12 +15,15 @@ if [[ "$OS" == "Linux" ]]; then
   NUM_PROC=$(nproc)
 fi
 
-# Global Config MacOS
+# For Darwin, we don't set the target-specific variables globally.
 if [[ "$OS" == "Darwin" ]]; then
   DYLIB_EXT="dylib"
   DYLIB_PREFIX="lib"
   NUM_PROC=$(sysctl -n hw.logicalcpu)
 fi
+
+# Company name used in packaging.
+CRISP_GROUP="Crisp Thinking Group Ltd."
 
 # Helper function to set up Darwin environment for a given architecture.
 configure_darwin_env() {
@@ -111,7 +113,8 @@ pack_nuget() {
   mkdir -p bin/artifacts
   echo "BatteryPackage.${OS}.csproj"
   echo "Packaging version: $version"
-  dotnet pack BatteryPackage.${OS}.csproj -c Release -o bin/artifacts/ -p:PackageVersion="$version"
+  dotnet pack BatteryPackage.${OS}.csproj -c Release -o bin/artifacts/ \
+    -p:PackageVersion="$version" -p:Company="$CRISP_GROUP"
   check_exit $?
 }
 
