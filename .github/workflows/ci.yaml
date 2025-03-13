@@ -70,7 +70,6 @@ jobs:
       # -----------------------------
       # macOS-specific steps
       # -----------------------------
-
       - name: Install Dependencies (macOS)
         if: matrix.os == 'macos-latest'
         run: |
