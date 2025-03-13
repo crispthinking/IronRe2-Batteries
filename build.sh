@@ -75,6 +75,7 @@ build_cre2() {
       -DRID="$RID" \
       -DDYLIB_EXT="$DYLIB_EXT" \
       -DDYLIB_PREFIX="$DYLIB_PREFIX"
+      -DCMAKE_OSX_ARCHITECTURES=$arch
     check_exit $?
 
     pushd bin/cre2 > /dev/null
