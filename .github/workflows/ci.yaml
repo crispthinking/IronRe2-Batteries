@@ -78,7 +78,7 @@ jobs:
           # Install native arm64 dependencies (default)
           brew install abseil googletest google-benchmark
           # Install Intel (x86_64) versions using Rosetta so that x64 builds find the right libraries:
-          arch -x86_64 brew install abseil googletest google-benchmark
+          arch -x86_64 /usr/local/bin/brew install abseil googletest google-benchmark
 
       - name: Run Build Script (macOS)
         if: matrix.os == 'macos-latest'

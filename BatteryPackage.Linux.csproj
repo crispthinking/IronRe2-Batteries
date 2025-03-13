@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <PackageId>IronRe2-Batteries.Linux</PackageId>
-    </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<PackageId>IronRe2-Batteries.Linux</PackageId>
+	</PropertyGroup>
 
-    <ItemGroup>
-        <Content Include="bin\cre2\libcre2.so">
-            <PackagePath>runtimes\linux-x64\native\libcre2.so</PackagePath>
-            <Pack>true</Pack>
-        </Content>
-    </ItemGroup>
+	<ItemGroup>
+		<Content Include="bin\cre2\libcre2.so">
+			<PackagePath>runtimes\linux-x64\native\libcre2.so</PackagePath>
+			<Pack>true</Pack>
+		</Content>
+	</ItemGroup>
 
 </Project>

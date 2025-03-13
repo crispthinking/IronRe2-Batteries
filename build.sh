@@ -3,7 +3,10 @@ set -euo pipefail
 
 OS="$(uname)"
 
-# Global configuration for Linux.
+# ------------------------------
+# Global Configuration
+# ------------------------------
+
 if [[ "$OS" == "Linux" ]]; then
   export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
   export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/local/include"
@@ -13,28 +16,36 @@ if [[ "$OS" == "Linux" ]]; then
   TARGET_RID="linux-x64"
   TARGET_ARCH=""  # Not used on Linux.
   NUM_PROC=$(nproc)
-fi
-
-# For Darwin, we only set common variables globally.
-if [[ "$OS" == "Darwin" ]]; then
+elif [[ "$OS" == "Darwin" ]]; then
+  # For Darwin, we leave target-specific variables unset globally.
   DYLIB_EXT="dylib"
   DYLIB_PREFIX="lib"
   NUM_PROC=$(sysctl -n hw.logicalcpu)
+else
+  echo "This build script currently supports only Linux and macOS."
+  exit 1
 fi
 
 # Company name used in packaging.
 CRISP_GROUP="Crisp Thinking Group Ltd."
 
-# Helper function to configure Darwin environment for a given architecture.
+# ------------------------------
+# Darwin-specific Configuration
+# ------------------------------
+# When building on Darwin, call this function with "x64" or "arm64" to
+# set the environment variables and TARGET_RID/ARCH appropriately.
 configure_darwin_env() {
   local arch="$1"
   if [[ "$arch" == "x64" ]]; then
+    # Use the Intel Homebrew installation (requires you have installed it under Rosetta,
+    # e.g. in /usr/local/Homebrew)
     export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
     export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/local/include"
     export LDFLAGS="-L/usr/local/lib"
     TARGET_RID="osx-x64"
     TARGET_ARCH="x86_64"
   elif [[ "$arch" == "arm64" ]]; then
+    # Use the native Homebrew (installed at /opt/homebrew)
     export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig"
     export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/opt/homebrew/include"
     export LDFLAGS="-L/opt/homebrew/lib"
@@ -46,6 +57,9 @@ configure_darwin_env() {
   fi
 }
 
+# ------------------------------
+# Helper Function
+# ------------------------------
 check_exit() {
   if [ "$1" -ne 0 ]; then
     echo "Process exited with code $1" >&2
@@ -53,7 +67,9 @@ check_exit() {
   fi
 }
 
-# Unified build function using TARGET_RID and TARGET_ARCH.
+# ------------------------------
+# Unified Build Function
+# ------------------------------
 build_cre2() {
   local build_dir="bin/cre2"
   if [[ "$OS" == "Darwin" ]]; then
@@ -126,6 +142,9 @@ clean() {
   popd > /dev/null
 }
 
+# ------------------------------
+# Main Entry Point
+# ------------------------------
 main() {
   TARGET="${1:-Default}"
   case "$TARGET" in
@@ -134,10 +153,11 @@ main() {
       ;;
     *)
       if [[ "$OS" == "Darwin" ]]; then
-        # Build for Intel (x64) CANT GET INTEL WORKING, HELP 
-        #configure_darwin_env "x64"
+        # Build for Intel (x64). Make sure your CI environment has the Intel Homebrew installed (usually at /usr/local).
+        configure_darwin_env "x64"
         build_cre2
-        # Build for Apple Silicon (arm64)
+
+        # Then build for Apple Silicon (arm64).
         configure_darwin_env "arm64"
         build_cre2
       else
