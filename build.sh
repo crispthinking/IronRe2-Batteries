@@ -154,8 +154,8 @@ main() {
     *)
       if [[ "$OS" == "Darwin" ]]; then
         # Build for Intel (x64). Make sure your CI environment has the Intel Homebrew installed (usually at /usr/local).
-        configure_darwin_env "x64"
-        build_cre2
+        # configure_darwin_env "x64"
+        # build_cre2
 
         # Then build for Apple Silicon (arm64).
         configure_darwin_env "arm64"
