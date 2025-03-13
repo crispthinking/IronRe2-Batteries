@@ -73,12 +73,21 @@ jobs:
       - name: Install Dependencies (macOS)
         if: matrix.os == 'macos-latest'
         run: |
+          # Update the native Homebrew (ARM) environment:
           brew update
           brew install gitversion nuget
-          # Install native arm64 dependencies (default)
+          # Install native ARM dependencies (from /opt/homebrew):
           brew install abseil googletest google-benchmark
-          # Install Intel (x86_64) versions using Rosetta so that x64 builds find the right libraries:
-          arch -x86_64 /usr/local/bin/brew install abseil googletest google-benchmark
+
+          # Ensure Intel Homebrew is installed at /usr/local/bin/brew.
+          # (If not already installed, you could add an installation step here.)
+          if [ -x /usr/local/bin/brew ]; then
+            echo "Using Intel Homebrew for x86_64 dependencies..."
+            arch -x86_64 /usr/local/bin/brew update
+            arch -x86_64 /usr/local/bin/brew install abseil googletest google-benchmark
+          else
+            echo "Warning: Intel Homebrew (/usr/local/bin/brew) not found. Intel (x86_64) dependencies will not be installed."
+          fi
 
       - name: Run Build Script (macOS)
         if: matrix.os == 'macos-latest'
