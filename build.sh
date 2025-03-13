@@ -41,6 +41,12 @@ build_cre2() {
   if [[ "$OS" == "Darwin" ]]; then
     local arch="$1"
     local RID_ARCH=""
+    local cmake_arch=""
+    if [[ "$arch" == "x64" ]]; then
+      cmake_arch="x86_64"
+    elif [[ "$arch" == "arm64" ]]; then
+      cmake_arch="arm64"
+    fi
     if [[ "$arch" == "x64" ]]; then
       RID_ARCH="osx-x64"
     elif [[ "$arch" == "arm64" ]]; then
@@ -56,6 +62,7 @@ build_cre2() {
       -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
       -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
       -DRID="$RID_ARCH" \
+      -DCMAKE_OSX_ARCHITECTURES="$cmake_arch" \
       -DDYLIB_EXT="$DYLIB_EXT" \
       -DDYLIB_PREFIX="$DYLIB_PREFIX"
     check_exit $?
