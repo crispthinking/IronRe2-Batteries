@@ -38,24 +38,51 @@ check_exit() {
 
 # --- Make ---
 build_cre2() {
-  echo "=== Build Make ==="
-  # Configure with CMake
-  mkdir -p bin/cre2
-  cmake . -B bin/cre2 \
-    -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
-    -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
-    -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
-    -DRID="$RID" \
-    -DDYLIB_EXT="$DYLIB_EXT" \
-    -DDYLIB_PREFIX="$DYLIB_PREFIX"
-  check_exit $?
+  if [[ "$OS" == "Darwin" ]]; then
+    local arch="$1"
+    local RID_ARCH=""
+    if [[ "$arch" == "x64" ]]; then
+      RID_ARCH="osx-x64"
+    elif [[ "$arch" == "arm64" ]]; then
+      RID_ARCH="osx-arm64"
+    else
+      echo "Invalid architecture for macOS build: $arch"
+      exit 1
+    fi
+    echo "=== Build Make for $arch (RID: $RID_ARCH) ==="
+    mkdir -p bin/cre2/$arch
+    cmake . -B bin/cre2/$arch \
+      -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+      -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
+      -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
+      -DRID="$RID_ARCH" \
+      -DDYLIB_EXT="$DYLIB_EXT" \
+      -DDYLIB_PREFIX="$DYLIB_PREFIX"
+    check_exit $?
 
-  # Build
-  pushd bin/cre2 > /dev/null
-  echo "Running: make -j$(( NUM_PROC * 2 ))"
-  make -j$(( NUM_PROC * 2 ))
-  check_exit $?
-  popd > /dev/null
+    pushd bin/cre2/$arch > /dev/null
+    echo "Running: make -j$(( NUM_PROC * 2 ))"
+    make -j$(( NUM_PROC * 2 ))
+    check_exit $?
+    popd > /dev/null
+  else
+    echo "=== Build Make ==="
+    mkdir -p bin/cre2
+    cmake . -B bin/cre2 \
+      -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+      -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
+      -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
+      -DRID="$RID" \
+      -DDYLIB_EXT="$DYLIB_EXT" \
+      -DDYLIB_PREFIX="$DYLIB_PREFIX"
+    check_exit $?
+
+    pushd bin/cre2 > /dev/null
+    echo "Running: make -j$(( NUM_PROC * 2 ))"
+    make -j$(( NUM_PROC * 2 ))
+    check_exit $?
+    popd > /dev/null
+  fi
 }
 
 pack_nuget() {
@@ -120,7 +147,12 @@ main() {
       clean
       ;;
     *)
-      build_cre2
+      if [[ "$OS" == "Darwin" ]]; then
+        build_cre2 x64
+        build_cre2 arm64
+      else
+        build_cre2
+      fi
       pack_nuget
       ;;
   esac
