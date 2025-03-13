@@ -20,8 +20,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-latest, windows-latest, macos-13] #macOS13 is intel based
-    runs-on: ${{ matrix.runner || matrix.os }}
+        os: [ubuntu-22.04, macos-latest, windows-latest] #macOS13 is intel based
+    runs-on: ${{matrix.os }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -59,19 +59,6 @@ jobs:
         run: ./build.sh
         env:
           CMAKE_PREFIX_PATH: "/usr/local"
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: Add GitHub Packages NuGet Source
-        run: dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/crispthinking/index.json"
-
-      - name: Restore dependencies
-        run: dotnet restore IronRe2.sln
-
-      - name: Build
-        run: dotnet build IronRe2.sln --configuration Release --no-restore
 
       - name: Upload Artifacts (Linux)
         if: matrix.os == 'ubuntu-22.04'
@@ -79,8 +66,6 @@ jobs:
         with:
           name: artifacts-linux
           path: bin/artifacts/
-      - name: Test
-        run: dotnet test IronRe2.sln --configuration Release --no-build --logger "trx" --logger "console;verbosity=normal"
       
       # -----------------------------
       # macOS-specific steps
@@ -118,8 +103,6 @@ jobs:
           choco install gitversion.portable -y
           choco install jq -y
           vcpkg install abseil:x64-windows-static
-      - name: Pack
-        run: dotnet pack IronRe2.sln --configuration Release --no-build --runtime ${{ matrix.runtime }} --output Artifacts
 
       - name: Run Build Script (Windows)
         if: matrix.os == 'windows-latest'
