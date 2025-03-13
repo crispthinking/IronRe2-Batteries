@@ -15,7 +15,7 @@ if [[ "$OS" == "Linux" ]]; then
   NUM_PROC=$(nproc)
 fi
 
-# For Darwin, we don't set the target-specific variables globally.
+# For Darwin, we only set common variables globally.
 if [[ "$OS" == "Darwin" ]]; then
   DYLIB_EXT="dylib"
   DYLIB_PREFIX="lib"
@@ -25,7 +25,7 @@ fi
 # Company name used in packaging.
 CRISP_GROUP="Crisp Thinking Group Ltd."
 
-# Helper function to set up Darwin environment for a given architecture.
+# Helper function to configure Darwin environment for a given architecture.
 configure_darwin_env() {
   local arch="$1"
   if [[ "$arch" == "x64" ]]; then
@@ -53,7 +53,7 @@ check_exit() {
   fi
 }
 
-# Unified build function that uses TARGET_RID and TARGET_ARCH.
+# Unified build function using TARGET_RID and TARGET_ARCH.
 build_cre2() {
   local build_dir="bin/cre2"
   if [[ "$OS" == "Darwin" ]]; then
@@ -134,8 +134,8 @@ main() {
       ;;
     *)
       if [[ "$OS" == "Darwin" ]]; then
-        # Build for Intel (x64)
-        configure_darwin_env "x64"
+        # Build for Intel (x64) CANT GET INTEL WORKING, HELP 
+        #configure_darwin_env "x64"
         build_cre2
         # Build for Apple Silicon (arm64)
         configure_darwin_env "arm64"
