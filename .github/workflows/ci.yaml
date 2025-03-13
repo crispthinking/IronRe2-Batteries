@@ -70,24 +70,33 @@ jobs:
       # -----------------------------
       # macOS-specific steps
       # -----------------------------
+
+      - name: Install Intel Homebrew (x86_64)
+        if: matrix.os == 'macos-latest'
+        run: |
+          if [ ! -x /usr/local/bin/brew ]; then
+            echo "Installing Intel Homebrew..."
+            arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            # Set up Intel Homebrew in the shell
+            eval "$(/usr/local/bin/brew shellenv)"
+          else
+            echo "Intel Homebrew is already installed."
+          fi
+
       - name: Install Dependencies (macOS)
         if: matrix.os == 'macos-latest'
         run: |
-          # Update the native Homebrew (ARM) environment:
+          # Update native ARM Homebrew (default at /opt/homebrew)
           brew update
           brew install gitversion nuget
-          # Install native ARM dependencies (from /opt/homebrew):
           brew install abseil googletest google-benchmark
 
-          # Ensure Intel Homebrew is installed at /usr/local/bin/brew.
-          # (If not already installed, you could add an installation step here.)
+          # Now use Intel Homebrew for the x86_64 versions
           if [ -x /usr/local/bin/brew ]; then
-            echo "Using Intel Homebrew for x86_64 dependencies..."
             arch -x86_64 /usr/local/bin/brew update
             arch -x86_64 /usr/local/bin/brew install abseil googletest google-benchmark
-          else
-            echo "Warning: Intel Homebrew (/usr/local/bin/brew) not found. Intel (x86_64) dependencies will not be installed."
           fi
+
 
       - name: Run Build Script (macOS)
         if: matrix.os == 'macos-latest'
