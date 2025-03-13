@@ -1,34 +1,49 @@
 #!/bin/bash
-
 set -euo pipefail
 
 OS="$(uname)"
+CRISP_GROUP="Crisp Thinking Group Ltd."
 
-# Set up environment variables based on OS
-if [[ "$OS" == "Darwin" ]]; then
-  export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/opt/homebrew/lib/pkgconfig"
-  export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/opt/homebrew/include -I/usr/local/include"
-  export LDFLAGS="-L/opt/homebrew/lib -L/usr/local/lib"
-  DYLIB_EXT="dylib"
-  DYLIB_PREFIX="lib"
-  RID="osx-x64"
-  NUM_PROC=$(sysctl -n hw.logicalcpu)
-elif [[ "$OS" == "Linux" ]]; then
+# Global configuration for Linux.
+if [[ "$OS" == "Linux" ]]; then
   export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
   export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/local/include"
   export LDFLAGS="-L/usr/local/lib"
   DYLIB_EXT="so"
   DYLIB_PREFIX="lib"
-  RID="linux-x64"
+  TARGET_RID="linux-x64"
+  TARGET_ARCH=""  # Not used on Linux.
   NUM_PROC=$(nproc)
-else
-  echo "This build script currently supports only Linux and macOS."
-  exit 1
 fi
 
-CRISP_GROUP="Crisp Thinking Group Ltd."
+# Global Config MacOS
+if [[ "$OS" == "Darwin" ]]; then
+  DYLIB_EXT="dylib"
+  DYLIB_PREFIX="lib"
+  NUM_PROC=$(sysctl -n hw.logicalcpu)
+fi
 
-# --- Helper Functions ---
+# Helper function to set up Darwin environment for a given architecture.
+configure_darwin_env() {
+  local arch="$1"
+  if [[ "$arch" == "x64" ]]; then
+    export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
+    export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/local/include"
+    export LDFLAGS="-L/usr/local/lib"
+    TARGET_RID="osx-x64"
+    TARGET_ARCH="x86_64"
+  elif [[ "$arch" == "arm64" ]]; then
+    export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig"
+    export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/opt/homebrew/include"
+    export LDFLAGS="-L/opt/homebrew/lib"
+    TARGET_RID="osx-arm64"
+    TARGET_ARCH="arm64"
+  else
+    echo "Invalid Darwin architecture: $arch"
+    exit 1
+  fi
+}
+
 check_exit() {
   if [ "$1" -ne 0 ]; then
     echo "Process exited with code $1" >&2
@@ -36,75 +51,35 @@ check_exit() {
   fi
 }
 
-# --- Make ---
+# Unified build function that uses TARGET_RID and TARGET_ARCH.
 build_cre2() {
+  local build_dir="bin/cre2"
   if [[ "$OS" == "Darwin" ]]; then
-    local arch="$1"
-    local RID_ARCH=""
-    local cmake_arch=""
-    if [[ "$arch" == "x64" ]]; then
-      cmake_arch="x86_64"
-    elif [[ "$arch" == "arm64" ]]; then
-      cmake_arch="arm64"
-    fi
-    if [[ "$arch" == "x64" ]]; then
-      RID_ARCH="osx-x64"
-    elif [[ "$arch" == "arm64" ]]; then
-      RID_ARCH="osx-arm64"
-    else
-      echo "Invalid architecture for macOS build: $arch"
-      exit 1
-    fi
-
-    # For x64 (Intel) builds on macOS, override environment variables to use the x86_64 Homebrew paths
-    if [[ "$arch" == "x64" ]]; then
-      export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
-      export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/local/include"
-      export LDFLAGS="-L/usr/local/lib"
-    fi
-
-    echo "=== Build Make for $arch (RID: $RID_ARCH) ==="
-    mkdir -p bin/cre2/$arch
-    cmake . -B bin/cre2/$arch \
-      -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
-      -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
-      -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
-      -DRID="$RID_ARCH" \
-      -DCMAKE_OSX_ARCHITECTURES="$cmake_arch" \
-      -DDYLIB_EXT="$DYLIB_EXT" \
-      -DDYLIB_PREFIX="$DYLIB_PREFIX"
-    check_exit $?
-
-    pushd bin/cre2/$arch > /dev/null
-    echo "Running: make -j$(( NUM_PROC * 2 ))"
-    make -j$(( NUM_PROC * 2 ))
-    check_exit $?
-    popd > /dev/null
-  else
-    echo "=== Build Make ==="
-    mkdir -p bin/cre2
-    cmake . -B bin/cre2 \
-      -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
-      -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
-      -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
-      -DRID="$RID" \
-      -DDYLIB_EXT="$DYLIB_EXT" \
-      -DDYLIB_PREFIX="$DYLIB_PREFIX" 
-    check_exit $?
-
-    pushd bin/cre2 > /dev/null
-    echo "Running: make -j$(( NUM_PROC * 2 ))"
-    make -j$(( NUM_PROC * 2 ))
-    check_exit $?
-    popd > /dev/null
+    build_dir="${build_dir}/${TARGET_RID}"
   fi
+
+  echo "=== Build Make (RID: ${TARGET_RID}, CMake Arch: ${TARGET_ARCH}) ==="
+  cmake . -B "${build_dir}" \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+    -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
+    -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
+    -DRID="${TARGET_RID}" \
+    -DCMAKE_OSX_ARCHITECTURES="${TARGET_ARCH}" \
+    -DDYLIB_EXT="$DYLIB_EXT" \
+    -DDYLIB_PREFIX="$DYLIB_PREFIX"
+  check_exit $?
+
+  pushd "${build_dir}" > /dev/null
+  echo "Running: make -j$(( NUM_PROC * 2 ))"
+  make -j$(( NUM_PROC * 2 ))
+  check_exit $?
+  popd > /dev/null
 }
 
 pack_nuget() {
   echo "=== Get Version Number ==="
   mkdir -p bin/artifacts
 
-  # Ensure a local dotnet tool manifest exists.
   if [ ! -f "./.config/dotnet-tools.json" ]; then
     echo "No tool manifest found. Creating one..."
     dotnet new tool-manifest
@@ -115,37 +90,31 @@ pack_nuget() {
     dotnet tool restore
   fi
 
-  # Check if jq is installed for parsing JSON output.
   if ! command -v jq &> /dev/null; then
     echo "Error: 'jq' is required but not installed. Please install jq and try again."
     exit 1
   fi
 
-  # Retrieve version information using GitVersion.
   echo "Retrieving version from GitVersion..."
   json_output=$(dotnet tool run dotnet-gitversion /output json 2>&1 || true)
-  echo "GitVersion output: $json_output"  # Debugging line
+  echo "GitVersion output: $json_output"
   json_output=$(echo "$json_output" | sed -n '/^{/,$p')
-  echo "Filtered JSON output: $json_output"  # Debugging line
+  echo "Filtered JSON output: $json_output"
   version=$(echo "$json_output" | jq -r '.SemVer')
-
   if [ -z "$version" ]; then
     echo "Error: Failed to retrieve version from GitVersion."
     exit 1
   fi
-
   echo "Version determined: $version"
 
   echo "=== Packing NuGet Package ==="
   mkdir -p bin/artifacts
-
   echo "BatteryPackage.${OS}.csproj"
   echo "Packaging version: $version"
   dotnet pack BatteryPackage.${OS}.csproj -c Release -o bin/artifacts/ -p:PackageVersion="$version"
   check_exit $?
 }
 
-# --- Clean Build Artifacts ---
 clean() {
   echo "=== Cleaning Build Artifacts ==="
   rm -rf bin/
@@ -154,7 +123,6 @@ clean() {
   popd > /dev/null
 }
 
-# --- Main ---
 main() {
   TARGET="${1:-Default}"
   case "$TARGET" in
@@ -163,8 +131,12 @@ main() {
       ;;
     *)
       if [[ "$OS" == "Darwin" ]]; then
-        build_cre2 x64
-        build_cre2 arm64
+        # Build for Intel (x64)
+        configure_darwin_env "x64"
+        build_cre2
+        # Build for Apple Silicon (arm64)
+        configure_darwin_env "arm64"
+        build_cre2
       else
         build_cre2
       fi
