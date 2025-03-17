@@ -68,21 +68,36 @@ jobs:
         run: |
           brew update
           brew install gitversion nuget
-          brew install abseil googletest google-benchmark
+          brew install googletest google-benchmark
+          # Note: We are not installing abseil via Homebrew since we want to build it statically.
 
-          if [ -x /usr/local/bin/brew ]; then
-            arch -x86_64 /usr/local/bin/brew update
-            arch -x86_64 /usr/local/bin/brew install abseil googletest google-benchmark
-          fi
+      - name: Build Abseil from source
+        run: |
+          git clone https://github.com/abseil/abseil-cpp.git
+          cd abseil-cpp
+          # Check out the revision specified in your repository.
+          git checkout $(cat $GITHUB_WORKSPACE/thirdparty/re2/ABSEIL_REVISION)
+          mkdir build && cd build
+          cmake .. \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=OFF \
+            -DCMAKE_INSTALL_PREFIX=/usr/local
+          # Use sysctl to get the number of logical CPUs on macOS.
+          sudo cmake --build . --parallel $(sysctl -n hw.logicalcpu) --target install
 
       - name: Run Build Script
         run: ./build.sh
+        env:
+          CMAKE_PREFIX_PATH: "/usr/local"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: artifacts-macos
           path: bin/artifacts/
+
 
   build-windows:
     runs-on: windows-latest
