@@ -20,10 +20,10 @@ endif()
 # Define RE2_STATIC globally.
 add_definitions(-DRE2_STATIC)
 
-# Define the cre2 DLL target.
+# Define the cre2 shared library target.
 add_library(cre2 SHARED "${CMAKE_SOURCE_DIR}/thirdparty/cre2/src/cre2.cpp")
 
-# On Windows, export all symbols (for MSVC).
+# On Windows, export all symbols for MSVC.
 if(WIN32)
   set_target_properties(cre2 PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
@@ -34,7 +34,7 @@ target_compile_definitions(cre2 PRIVATE
   cre2_VERSION_INTERFACE_REVISION=0
   cre2_VERSION_INTERFACE_AGE=0
   cre2_VERSION_INTERFACE_STRING="0.0.0"
-  RE2_STATIC  # Ensure that cre2's translation units know we're linking statically.
+  RE2_STATIC  # Mark as static linking.
 )
 
 # Specify include directories for cre2.
@@ -48,8 +48,6 @@ find_package(absl CONFIG REQUIRED)
 
 # Build re2 as a subdirectory.
 add_subdirectory("${CMAKE_SOURCE_DIR}/thirdparty/re2" re2)
-
-# Ensure the re2 target sees RE2_STATIC.
 target_compile_definitions(re2 PUBLIC RE2_STATIC)
 
 # Link required libraries.
@@ -61,9 +59,10 @@ target_link_libraries(cre2 PRIVATE
   re2
 )
 
-# On MSVC, force whole-archive linking for re2; otherwise, use a generator expression.
+# Link re2 as a whole archive.
 if(MSVC)
   target_link_options(cre2 PRIVATE "/WHOLEARCHIVE:re2.lib")
 else()
-  target_link_libraries(cre2 PRIVATE "$<LINK_WHOLE_ARCHIVE:re2>")
+  # Remove the quotes so the generator expression is recognized.
+  target_link_libraries(cre2 PRIVATE $<LINK_WHOLE_ARCHIVE:re2>)
 endif()
