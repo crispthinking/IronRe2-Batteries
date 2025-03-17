@@ -59,10 +59,13 @@ target_link_libraries(cre2 PRIVATE
   re2
 )
 
-# Link re2 as a whole archive.
+# Platform-specific whole-archive linking for re2.
 if(MSVC)
   target_link_options(cre2 PRIVATE "/WHOLEARCHIVE:re2.lib")
-else()
-  # Remove the quotes so the generator expression is recognized.
-  target_link_libraries(cre2 PRIVATE $<LINK_WHOLE_ARCHIVE:re2>)
+elseif(APPLE)
+  # On macOS, force linking the entire static library using -force_load.
+  target_link_libraries(cre2 PRIVATE "-Wl,-force_load" $<TARGET_FILE:re2>)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  # On GNU or Clang (Linux), use --whole-archive flags.
+  target_link_libraries(cre2 PRIVATE "-Wl,--whole-archive" re2 "-Wl,--no-whole-archive")
 endif()
