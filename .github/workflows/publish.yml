@@ -26,7 +26,6 @@ jobs:
     # https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository
     # You can update this logic if you want to manage releases differently
   publish:
-    if: github.event_name == 'release'
     runs-on: ubuntu-22.04
     needs: build
     steps:
@@ -60,6 +59,7 @@ jobs:
           dotnet nuget push bin/artifacts/**/*.nupkg --api-key "${{ secrets.GITHUB_TOKEN }}" --source "https://nuget.pkg.github.com/crispthinking/index.json" --skip-duplicate
 
       - name: Publish NuGet package
+        if: github.event_name == 'release'
         run: |
           dotnet nuget push bin/artifacts/**/*.nupkg --api-key "${{ secrets.NUGET_APIKEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
 
