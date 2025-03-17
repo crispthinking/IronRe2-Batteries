@@ -6,7 +6,6 @@
 	"recommendations": [
 		"formulahendry.dotnet-test-explorer",
 		"ms-vscode.csharp",
-		"cake-build.cake-vscode",
 		"editorconfig.editorconfig"
 	],
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
