@@ -1,0 +1,14 @@
+<Project>
+
+	<PropertyGroup>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+		<Authors>Crisp Thinking Group Ltd.</Authors>
+		<Owners>Crisp Thinking Group Ltd.</Owners>
+		<PackageDescription>Platform-specific NuGet package containing RE2 and the cre2 wrapper</PackageDescription>
+		<PackageTags>Regex;Re2</PackageTags>
+		<Copyright>Crisp Thinking Group Ltd. 2025</Copyright>
+	</PropertyGroup>
+
+</Project>

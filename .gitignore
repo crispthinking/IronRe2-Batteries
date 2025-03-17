@@ -211,3 +211,7 @@ tools/**
 CoverageResults/
 Artifacts/
 DeployArtifacts/
+.DS_Store
+/.idea/.idea.IronRe2-Batteries/.idea/.gitignore
+/.idea/.idea.IronRe2-Batteries/.idea/indexLayout.xml
+/.idea/.idea.IronRe2-Batteries/.idea/vcs.xml

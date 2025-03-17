@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<PackageId>IronRe2-Batteries.OSX</PackageId>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Include="bin/cre2/osx-arm64/libcre2.dylib">
+			<PackagePath>runtimes/osx-arm64/native/libcre2.dylib</PackagePath>
+			<Pack>true</Pack>
+		</Content>
+	</ItemGroup>
+</Project>

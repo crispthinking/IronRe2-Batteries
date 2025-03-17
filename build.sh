@@ -1,117 +1,171 @@
-#!/usr/bin/env bash
+#!/bin/bash
+set -euo pipefail
 
-##########################################################################
-# This is the Cake bootstrapper script for Linux and OS X.
-# This file was downloaded from https://github.com/cake-build/resources
-# Feel free to change this file to fit your needs.
-##########################################################################
+OS="$(uname)"
 
-# Define directories.
-SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-TOOLS_DIR=$SCRIPT_DIR/tools
-ADDINS_DIR=$TOOLS_DIR/Addins
-MODULES_DIR=$TOOLS_DIR/Modules
-NUGET_EXE=$TOOLS_DIR/nuget.exe
-CAKE_EXE=$TOOLS_DIR/Cake/Cake.exe
-PACKAGES_CONFIG=$TOOLS_DIR/packages.config
-PACKAGES_CONFIG_MD5=$TOOLS_DIR/packages.config.md5sum
-ADDINS_PACKAGES_CONFIG=$ADDINS_DIR/packages.config
-MODULES_PACKAGES_CONFIG=$MODULES_DIR/packages.config
+# ------------------------------
+# Global Configuration
+# ------------------------------
 
-# Define md5sum or md5 depending on Linux/OSX
-MD5_EXE=
-if [[ "$(uname -s)" == "Darwin" ]]; then
-    MD5_EXE="md5 -r"
+if [[ "$OS" == "Linux" ]]; then
+  export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+  export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/local/include"
+  export LDFLAGS="-L/usr/local/lib"
+  DYLIB_EXT="so"
+  DYLIB_PREFIX="lib"
+  TARGET_RID="linux-x64"
+  TARGET_ARCH=""  # Not used on Linux.
+  NUM_PROC=$(nproc)
+elif [[ "$OS" == "Darwin" ]]; then
+  # For Darwin, we leave target-specific variables unset globally.
+  DYLIB_EXT="dylib"
+  DYLIB_PREFIX="lib"
+  NUM_PROC=$(sysctl -n hw.logicalcpu)
 else
-    MD5_EXE="md5sum"
+  echo "This build script currently supports only Linux and macOS."
+  exit 1
 fi
 
-# Define default arguments.
-SCRIPT="build.cake"
-CAKE_ARGUMENTS=()
+# Company name used in packaging.
+CRISP_GROUP="Crisp Thinking Group Ltd."
 
-# Parse arguments.
-for i in "$@"; do
-    case $1 in
-        -s|--script) SCRIPT="$2"; shift ;;
-        --) shift; CAKE_ARGUMENTS+=("$@"); break ;;
-        *) CAKE_ARGUMENTS+=("$1") ;;
-    esac
-    shift
-done
-
-# Make sure the tools folder exist.
-if [ ! -d "$TOOLS_DIR" ]; then
-  mkdir "$TOOLS_DIR"
-fi
-
-# Make sure that packages.config exist.
-if [ ! -f "$TOOLS_DIR/packages.config" ]; then
-    echo "Downloading packages.config..."
-    curl -Lsfo "$TOOLS_DIR/packages.config" https://cakebuild.net/download/bootstrapper/packages
-    if [ $? -ne 0 ]; then
-        echo "An error occurred while downloading packages.config."
-        exit 1
-    fi
-fi
-
-# Download NuGet if it does not exist.
-if [ ! -f "$NUGET_EXE" ]; then
-    echo "Downloading NuGet..."
-    curl -Lsfo "$NUGET_EXE" https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-    if [ $? -ne 0 ]; then
-        echo "An error occurred while downloading nuget.exe."
-        exit 1
-    fi
-fi
-
-# Restore tools from NuGet.
-pushd "$TOOLS_DIR" >/dev/null
-if [ ! -f "$PACKAGES_CONFIG_MD5" ] || [ "$( cat "$PACKAGES_CONFIG_MD5" | sed 's/\r$//' )" != "$( $MD5_EXE "$PACKAGES_CONFIG" | awk '{ print $1 }' )" ]; then
-    find . -type d ! -name . ! -name 'Cake.Bakery' | xargs rm -rf
-fi
-
-mono "$NUGET_EXE" install -ExcludeVersion
-if [ $? -ne 0 ]; then
-    echo "Could not restore NuGet tools."
+# ------------------------------
+# Darwin-specific Configuration
+# ------------------------------
+# When building on Darwin, call this function with "x64" or "arm64" to
+# set the environment variables and TARGET_RID/ARCH appropriately.
+configure_darwin_env() {
+  local arch="$1"
+  if [[ "$arch" == "x64" ]]; then
+    # Use the Intel Homebrew installation (requires you have installed it under Rosetta,
+    # e.g. in /usr/local/Homebrew)
+    export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
+    export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/usr/local/include"
+    export LDFLAGS="-L/usr/local/lib"
+    TARGET_RID="osx-x64"
+    TARGET_ARCH="x86_64"
+  elif [[ "$arch" == "arm64" ]]; then
+    # Use the native Homebrew (installed at /opt/homebrew)
+    export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig"
+    export CXXFLAGS="-std=c++17 -fPIC -O3 -g -I/opt/homebrew/include"
+    export LDFLAGS="-L/opt/homebrew/lib"
+    TARGET_RID="osx-arm64"
+    TARGET_ARCH="arm64"
+  else
+    echo "Invalid Darwin architecture: $arch"
     exit 1
-fi
+  fi
+}
 
-$MD5_EXE "$PACKAGES_CONFIG" | awk '{ print $1 }' >| "$PACKAGES_CONFIG_MD5"
+# ------------------------------
+# Helper Function
+# ------------------------------
+check_exit() {
+  if [ "$1" -ne 0 ]; then
+    echo "Process exited with code $1" >&2
+    exit $1
+  fi
+}
 
-popd >/dev/null
+# ------------------------------
+# Unified Build Function
+# ------------------------------
+build_cre2() {
+  local build_dir="bin/cre2"
+  if [[ "$OS" == "Darwin" ]]; then
+    build_dir="${build_dir}/${TARGET_RID}"
+  fi
 
-# Restore addins from NuGet.
-if [ -f "$ADDINS_PACKAGES_CONFIG" ]; then
-    pushd "$ADDINS_DIR" >/dev/null
+  echo "=== Build Make (RID: ${TARGET_RID}, CMake Arch: ${TARGET_ARCH}) ==="
+  cmake . -B "${build_dir}" \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+    -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
+    -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
+    -DRID="${TARGET_RID}" \
+    -DCMAKE_OSX_ARCHITECTURES="${TARGET_ARCH}" \
+    -DDYLIB_EXT="$DYLIB_EXT" \
+    -DDYLIB_PREFIX="$DYLIB_PREFIX"
+  check_exit $?
 
-    mono "$NUGET_EXE" install -ExcludeVersion
-    if [ $? -ne 0 ]; then
-        echo "Could not restore NuGet addins."
-        exit 1
-    fi
+  pushd "${build_dir}" > /dev/null
+  echo "Running: make -j$(( NUM_PROC * 2 ))"
+  make -j$(( NUM_PROC * 2 ))
+  check_exit $?
+  popd > /dev/null
+}
 
-    popd >/dev/null
-fi
+pack_nuget() {
+  echo "=== Get Version Number ==="
+  mkdir -p bin/artifacts
 
-# Restore modules from NuGet.
-if [ -f "$MODULES_PACKAGES_CONFIG" ]; then
-    pushd "$MODULES_DIR" >/dev/null
+  if [ ! -f "./.config/dotnet-tools.json" ]; then
+    echo "No tool manifest found. Creating one..."
+    dotnet new tool-manifest
+    echo "Installing GitVersion.Tool as a local tool..."
+    dotnet tool install GitVersion.Tool --version 6.1.0
+  else
+    echo "Tool manifest found. Restoring tools..."
+    dotnet tool restore
+  fi
 
-    mono "$NUGET_EXE" install -ExcludeVersion
-    if [ $? -ne 0 ]; then
-        echo "Could not restore NuGet modules."
-        exit 1
-    fi
-
-    popd >/dev/null
-fi
-
-# Make sure that Cake has been installed.
-if [ ! -f "$CAKE_EXE" ]; then
-    echo "Could not find Cake.exe at '$CAKE_EXE'."
+  if ! command -v jq &> /dev/null; then
+    echo "Error: 'jq' is required but not installed. Please install jq and try again."
     exit 1
-fi
+  fi
 
-# Start Cake
-exec mono "$CAKE_EXE" $SCRIPT "${CAKE_ARGUMENTS[@]}"
+  echo "Retrieving version from GitVersion..."
+  json_output=$(dotnet tool run dotnet-gitversion /output json 2>&1 || true)
+  echo "GitVersion output: $json_output"
+  json_output=$(echo "$json_output" | sed -n '/^{/,$p')
+  echo "Filtered JSON output: $json_output"
+  version=$(echo "$json_output" | jq -r '.SemVer')
+  if [ -z "$version" ]; then
+    echo "Error: Failed to retrieve version from GitVersion."
+    exit 1
+  fi
+  echo "Version determined: $version"
+
+  echo "=== Packing NuGet Package ==="
+  mkdir -p bin/artifacts
+  echo "BatteryPackage.${OS}.csproj"
+  echo "Packaging version: $version"
+  dotnet pack BatteryPackage.${OS}.csproj -c Release -o bin/artifacts/ \
+    -p:PackageVersion="$version" -p:Company="$CRISP_GROUP"
+  check_exit $?
+}
+
+clean() {
+  echo "=== Cleaning Build Artifacts ==="
+  rm -rf bin/
+  pushd thirdparty/re2 > /dev/null
+  make clean
+  popd > /dev/null
+}
+
+# ------------------------------
+# Main Entry Point
+# ------------------------------
+main() {
+  TARGET="${1:-Default}"
+  case "$TARGET" in
+    Clean)
+      clean
+      ;;
+    *)
+      if [[ "$OS" == "Darwin" ]]; then
+        # Build for Intel (x64). Make sure your CI environment has the Intel Homebrew installed (usually at /usr/local).
+        # configure_darwin_env "x64"
+        # build_cre2
+
+        # Then build for Apple Silicon (arm64).
+        configure_darwin_env "arm64"
+        build_cre2
+      else
+        build_cre2
+      fi
+      pack_nuget
+      ;;
+  esac
+}
+
+main "$@"
