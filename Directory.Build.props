@@ -6,4 +6,7 @@
 		<PackageTags>Regex;Re2</PackageTags>
 		<Copyright>Crisp Thinking Group Ltd. 2025</Copyright>
 	</PropertyGroup>
+	<ItemGroup>
+		<None Include="$(MsBuildThisFileDirectory)/README.md" Pack="true" PackagePath="/" />
+	</ItemGroup>
 </Project>
