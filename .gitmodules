@@ -4,3 +4,6 @@
 [submodule "cre2"]
 	path = thirdparty/cre2
 	url = https://github.com/marcomaggi/cre2
+[submodule "thirdparty/abseil-cpp"]
+	path = thirdparty/abseil-cpp
+	url = https://github.com/abseil/abseil-cpp.git
