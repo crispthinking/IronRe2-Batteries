@@ -39,6 +39,7 @@ target_include_directories(cre2 PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/re2")
 # Build Abseil from the vendored thirdparty directory.
 # This will make absl targets available to RE2 and cre2.
 set(ABSL_PROPAGATE_CXX_STD ON)
+set(ABSL_ENABLE_INSTALL ON)
 set(BUILD_TESTING OFF)
 add_subdirectory("${CMAKE_SOURCE_DIR}/thirdparty/abseil-cpp" abseil-cpp)
 
