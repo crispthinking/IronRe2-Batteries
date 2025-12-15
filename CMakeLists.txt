@@ -41,7 +41,15 @@ target_include_directories(cre2 PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/re2")
 set(ABSL_PROPAGATE_CXX_STD ON)
 set(ABSL_ENABLE_INSTALL ON)
 set(BUILD_TESTING OFF)
+
 add_subdirectory("${CMAKE_SOURCE_DIR}/thirdparty/abseil-cpp" abseil-cpp)
+
+# On macOS with ARM64 only, override Abseil's RANDEN_COPTS to remove x86_64 SSE flags.
+# Abseil's AbseilConfigureCopts.cmake adds -Xarch_x86_64 -msse4.1 for universal builds,
+# but Apple Clang rejects SSE flags even with -Xarch_ prefix when building ARM64-only.
+if(APPLE AND CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
+  set(ABSL_RANDOM_RANDEN_COPTS "-march=armv8-a+crypto" CACHE STRING "ARM64-only flags" FORCE)
+endif()
 
 # Build re2 as a subdirectory.
 # RE2 will automatically use the Abseil targets we just added.
