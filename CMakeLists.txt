@@ -17,7 +17,7 @@ if(MSVC)
   set(RE2_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 endif()
 
-# Define RE2_STATIC globally so that RE2’s headers treat the library as static.
+# Define RE2_STATIC globally so that RE2ï¿½s headers treat the library as static.
 add_definitions(-DRE2_STATIC)
 
 # Define the cre2 shared library target.
@@ -36,23 +36,14 @@ target_compile_definitions(cre2 PRIVATE
 
 target_include_directories(cre2 PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/re2")
 
-# (Optional) For Windows with vcpkg, adjust the absl_DIR as needed.
-if(WIN32)
-  set(absl_DIR "C:/vcpkg/installed/x64-windows-static/share/absl")
-endif()
-
-# Force static linking for Abseil on all platforms.
-set(ABSEIL_USE_STATIC_LIBS ON CACHE BOOL "Use Abseil as static libraries" FORCE)
-
-find_package(absl CONFIG REQUIRED)
-
-# For UNIX systems (Linux/macOS), instruct RE2 to use the system-installed Abseil.
-if(NOT WIN32)
-  set(RE2_USE_ABSEIL ON)
-  set(RE2_ABSEIL_SOURCE "system")
-endif()
+# Build Abseil from the vendored thirdparty directory.
+# This will make absl targets available to RE2 and cre2.
+set(ABSL_PROPAGATE_CXX_STD ON)
+set(BUILD_TESTING OFF)
+add_subdirectory("${CMAKE_SOURCE_DIR}/thirdparty/abseil-cpp" abseil-cpp)
 
 # Build re2 as a subdirectory.
+# RE2 will automatically use the Abseil targets we just added.
 add_subdirectory("${CMAKE_SOURCE_DIR}/thirdparty/re2" re2)
 
 # Link libraries. On all platforms, link Abseil targets statically together with re2.
