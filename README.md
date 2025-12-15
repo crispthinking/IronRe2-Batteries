@@ -12,6 +12,8 @@ This repository is distributed under [the MIT license][mit-license]. Code in
 the submodules in the `thirdparty/` folder is licensed under the terms of
 the respective projects.
 
+### Contributors
+
  [main_repo]: https://github.com/crispthinking/IronRe2
  [RE2]: https://github.com/google/re2
  [cre2]: https://github.com/marcomaggi/cre2
