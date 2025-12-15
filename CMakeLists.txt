@@ -15,6 +15,10 @@ if(MSVC)
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   # Ensure RE2 builds as static.
   set(RE2_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+  # Set policy for MSVC runtime library
+  if(POLICY CMP0091)
+    cmake_policy(SET CMP0091 NEW)
+  endif()
 endif()
 
 # Define RE2_STATIC globally so that RE2�s headers treat the library as static.
@@ -41,6 +45,10 @@ target_include_directories(cre2 PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/re2")
 set(ABSL_PROPAGATE_CXX_STD ON)
 set(ABSL_ENABLE_INSTALL ON)
 set(BUILD_TESTING OFF)
+# Ensure Abseil uses the same MSVC runtime library
+if(MSVC)
+  set(ABSL_MSVC_STATIC_RUNTIME ON CACHE BOOL "" FORCE)
+endif()
 add_subdirectory("${CMAKE_SOURCE_DIR}/thirdparty/abseil-cpp" abseil-cpp)
 
 # Build re2 as a subdirectory.
