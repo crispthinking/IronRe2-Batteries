@@ -30,19 +30,19 @@ jobs:
     needs: build
     steps:
       - name: Download Windows Package
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: artifacts-windows
           path: bin/artifacts/Windows/
 
       - name: Download Linux Package
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: artifacts-linux
           path: bin/artifacts/Linux/
 
       - name: Download macOS Package
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: artifacts-macos
           path: bin/artifacts/macos/
