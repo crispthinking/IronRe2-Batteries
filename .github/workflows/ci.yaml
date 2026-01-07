@@ -39,7 +39,7 @@ jobs:
         run: ./build.sh
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: artifacts-linux
           path: bin/artifacts/
@@ -63,7 +63,7 @@ jobs:
         run: ./build.sh
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: artifacts-macos
           path: bin/artifacts/
@@ -89,7 +89,7 @@ jobs:
         run: build.bat
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: artifacts-windows
           path: bin/artifacts/
